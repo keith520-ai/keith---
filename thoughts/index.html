@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思考碎片 · 万朗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/shared/styles.css">
+    <style>
+        .thought-chip { transition: all 0.2s ease; }
+        .thought-chip:hover { transform: translateY(-2px) rotate(-1deg); }
+    </style>
+</head>
+<body class="bg-white">
+
+    <section class="min-h-screen w-full px-8 py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div class="max-w-5xl mx-auto card-fade">
+            <a href="/" class="back-link mb-12">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>返回首页</span>
+            </a>
+
+            <div class="mb-16 mt-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="page-header-num text-xs text-gray-300">06</span>
+                    <div class="w-8 h-0.5 bg-gradient-to-r from-[#60A5FA] to-[#3B82F6]"></div>
+                </div>
+                <h1 class="text-5xl font-bold text-gray-900 mb-4">思考碎片</h1>
+                <p class="text-gray-400 text-lg">Thoughts — 零散的想法，等待连接</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="thought-chip bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <p class="text-xs text-blue-400 font-mono mb-2">2026.06.25</p>
+                    <p class="text-gray-700 leading-relaxed">好产品不是给用户更多选择，而是帮用户减少决策负担。</p>
+                </div>
+                <div class="thought-chip bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <p class="text-xs text-pink-400 font-mono mb-2">2026.06.20</p>
+                    <p class="text-gray-700 leading-relaxed">AI 不会取代产品经理，但会取代不会用 AI 的产品经理。</p>
+                </div>
+                <div class="thought-chip bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <p class="text-xs text-amber-400 font-mono mb-2">2026.06.15</p>
+                    <p class="text-gray-700 leading-relaxed">用户说的需求，往往是他们能想到的最差解决方案。真正的需求藏在他们的痛苦里。</p>
+                </div>
+                <div class="thought-chip bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <p class="text-xs text-emerald-400 font-mono mb-2">2026.06.10</p>
+                    <p class="text-gray-700 leading-relaxed">社交产品的本质不是连接人，而是连接人在彼此身上的投射。</p>
+                </div>
+                <div class="thought-chip bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <p class="text-xs text-violet-400 font-mono mb-2">2026.06.05</p>
+                    <p class="text-gray-700 leading-relaxed">设计的最高境界，是让技术隐于无形，让体验自然流淌。</p>
+                </div>
+                <div class="thought-chip bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 shadow-sm flex flex-col items-center justify-center text-center">
+                    <p class="text-3xl mb-3">💭</p>
+                    <p class="text-gray-500 text-sm">下一个思考，可能来自你的启发...</p>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <p class="text-gray-400 mb-4">想和我交流这些想法？</p>
+                <a href="mailto:your.email@example.com" class="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition">
+                    <span>📧</span>
+                    <span>发邮件聊聊</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <script src="/shared/nav.js"></script>
+</body>
+</html>

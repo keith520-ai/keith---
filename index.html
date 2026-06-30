@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>万朗 - 产品经理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/shared/styles.css">
+    <style>
+        html, body { height: 100%; overflow: hidden; }
+        body { background: #000; }
+
+        /* ===== 视频层 ===== */
+        #videoStage {
+            position: fixed;
+            inset: 0;
+            z-index: 30;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        #introVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+        }
+        #skipBtn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.25);
+            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 40;
+            transition: all 0.2s ease;
+        }
+        #skipBtn:hover {
+            color: white;
+            border-color: rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.4);
+        }
+        #videoStage.fade-out { opacity: 0; pointer-events: none; }
+
+        /* ===== 主舞台 ===== */
+        #mainStage {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            opacity: 0;
+            transform: scale(1.03);
+            background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%);
+            will-change: opacity, transform;
+        }
+        #mainStage.transitioning {
+            transition: opacity 0.9s ease, transform 0.9s ease;
+        }
+        #mainStage.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        html.show-main, body.show-main { overflow: auto; }
+
+        /* 左：AI 虚拟人 */
+        .avatar-pane {
+            flex: 0 0 42%;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .avatar-glow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 45%, rgba(167,139,250,0.35) 0%, transparent 55%);
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.08); }
+        }
+        .avatar-circle {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #A78BFA 0%, #F472B6 50%, #FF8E72 100%);
+            box-shadow: 0 30px 80px rgba(167,139,250,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: floatY 6s ease-in-out infinite;
+        }
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-12px); }
+        }
+        .avatar-circle::before {
+            content: '';
+            position: absolute;
+            inset: -16px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.18);
+            animation: ringRotate 12s linear infinite;
+        }
+        .avatar-circle::after {
+            content: '';
+            position: absolute;
+            inset: -32px;
+            border-radius: 50%;
+            border: 1px dashed rgba(255,255,255,0.12);
+            animation: ringRotate 24s linear infinite reverse;
+        }
+        @keyframes ringRotate {
+            to { transform: rotate(360deg); }
+        }
+        .avatar-icon {
+            font-size: 96px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+        }
+        .avatar-label {
+            position: absolute;
+            bottom: 48px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255,255,255,0.85);
+        }
+        .avatar-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+        .avatar-role {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 2px;
+        }
+        .avatar-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ECDC4;
+            box-shadow: 0 0 12px #4ECDC4;
+            animation: blinkDot 1.6s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes blinkDot {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.35; }
+        }
+
+        /* 右：六大模块 */
+        .modules-pane {
+            flex: 1;
+            padding: 48px 56px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        .modules-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 24px;
+        }
+        .modules-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .module-card {
+            position: relative;
+            padding: 24px;
+            border-radius: 18px;
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            display: block;
+        }
+        .module-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .module-card:hover .module-arrow {
+            transform: translate(4px, -4px);
+        }
+        .module-arrow { transition: transform 0.3s ease; }
+        .module-num {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11px;
+            opacity: 0.65;
+        }
+        .module-title { font-size: 18px; font-weight: 700; margin-top: 28px; }
+        .module-en { font-size: 11px; opacity: 0.65; margin-top: 2px; }
+
+        /* 入场顺序动画 */
+        #mainStage.visible .module-card {
+            animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+        #mainStage.visible .module-card:nth-child(1) { animation-delay: 0.20s; }
+        #mainStage.visible .module-card:nth-child(2) { animation-delay: 0.28s; }
+        #mainStage.visible .module-card:nth-child(3) { animation-delay: 0.36s; }
+        #mainStage.visible .module-card:nth-child(4) { animation-delay: 0.44s; }
+        #mainStage.visible .module-card:nth-child(5) { animation-delay: 0.52s; }
+        #mainStage.visible .module-card:nth-child(6) { animation-delay: 0.60s; }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            #mainStage { flex-direction: column; }
+            .avatar-pane { flex: 0 0 40%; }
+            .modules-pane { padding: 32px 24px; }
+            .avatar-circle { width: 160px; height: 160px; }
+            .avatar-icon { font-size: 60px; }
+            .avatar-label { bottom: 16px; }
+            .avatar-name { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 视频层 -->
+    <div id="videoStage">
+        <video id="introVideo" playsinline preload="auto" muted>
+            <source src="/assets/intro.mp4" type="video/mp4">
+        </video>
+        <button id="skipBtn" type="button">跳过 ›</button>
+    </div>
+
+    <!-- 主舞台 -->
+    <div id="mainStage">
+        <!-- 左：AI 虚拟人 -->
+        <div class="avatar-pane">
+            <div class="avatar-glow"></div>
+            <div class="avatar-circle">
+                <span class="avatar-icon">🧑‍💻</span>
+            </div>
+            <div class="avatar-label">
+                <p class="avatar-name">万朗</p>
+                <p class="avatar-role"><span class="avatar-dot"></span>AI · 产品经理</p>
+            </div>
+        </div>
+
+        <!-- 右：六大模块 -->
+        <div class="modules-pane">
+            <p class="modules-title">探索我的世界</p>
+            <div class="modules-grid">
+                <a href="/story/" class="module-card" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E72 100%);">
+                    <div class="flex justify-between items-start">
+                        <span class="module-num">01</span>
+                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </div>
+                    <p class="module-title">个人故事</p>
+                    <p class="module-en">My Story</p>
+                </a>
+                <a href="/projects/" class="module-card" style="background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);">
+                    <div class="flex justify-between items-start">
+                        <span class="module-num">02</span>
+                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </div>
+                    <p class="module-title">项目经历</p>
+                    <p class="module-en">Projects</p>
+                </a>
+                <a href="/inspiration/" class="module-card" style="background: linear-gradient(135deg, #FFB347 0%, #FFA500 100%);">
+                    <div class="flex justify-between items-start">
+                        <span class="module-num">03</span>
+                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </div>
+                    <p class="module-title">灵感采集</p>
+                    <p class="module-en">Inspiration</p>
+                </a>
+                <a href="/lab/" class="module-card" style="background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);">
+                    <div class="flex justify-between items-start">
+                        <span class="module-num">04</span>
+                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </div>
+                    <p class="module-title">实验场</p>
+                    <p class="module-en">Lab</p>
+                </a>
+                <a href="/fun/" class="module-card" style="background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%);">
+                    <div class="flex justify-between items-start">
+                        <span class="module-num">05</span>
+                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </div>
+                    <p class="module-title">趣味互动</p>
+                    <p class="module-en">Play</p>
+                </a>
+                <a href="/thoughts/" class="module-card" style="background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);">
+                    <div class="flex justify-between items-start">
+                        <span class="module-num">06</span>
+                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                    </div>
+                    <p class="module-title">思考碎片</p>
+                    <p class="module-en">Thoughts</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const SESSION_KEY = 'introPlayed';
+            const videoStage = document.getElementById('videoStage');
+            const mainStage = document.getElementById('mainStage');
+            const video = document.getElementById('introVideo');
+            const skipBtn = document.getElementById('skipBtn');
+
+            // 已在本次会话播放过 → 直接显示主舞台
+            // sessionStorage 的特性：标签页关闭即清空，再次进入会重新播放
+            const alreadyPlayed = sessionStorage.getItem(SESSION_KEY) === '1';
+
+            function showMain() {
+                if (showMain._done) return;
+                showMain._done = true;
+                sessionStorage.setItem(SESSION_KEY, '1');
+                document.documentElement.classList.add('show-main');
+                document.body.classList.add('show-main');
+
+                // 先启用过渡，再切到可见态
+                mainStage.classList.add('transitioning');
+                void mainStage.offsetWidth;
+                setTimeout(() => {
+                    mainStage.classList.add('visible');
+                }, 16);
+
+                // 视频淡出
+                setTimeout(() => {
+                    videoStage.classList.add('fade-out');
+                    setTimeout(() => {
+                        videoStage.style.display = 'none';
+                    }, 900);
+                }, 80);
+            }
+
+            if (alreadyPlayed) {
+                // 跳过视频，直接展示（无过渡）
+                videoStage.style.display = 'none';
+                document.documentElement.classList.add('show-main');
+                document.body.classList.add('show-main');
+                mainStage.classList.add('visible');
+            } else {
+                // 视频播放结束 → 过渡到主舞台
+                video.addEventListener('ended', showMain);
+                // 视频加载失败 → 也直接进入主舞台
+                video.addEventListener('error', showMain);
+                // 跳过按钮
+                skipBtn.addEventListener('click', showMain);
+                // 自动播放
+                const playPromise = video.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(() => {
+                        // 自动播放被阻止时，等待用户点击页面任意位置触发
+                        const onFirstInteract = () => {
+                            video.play().catch(() => showMain());
+                            window.removeEventListener('click', onFirstInteract);
+                            window.removeEventListener('keydown', onFirstInteract);
+                        };
+                        window.addEventListener('click', onFirstInteract);
+                        window.addEventListener('keydown', onFirstInteract);
+                    });
+                }
+            }
+        })();
+    </script>
+    <script src="/shared/nav.js"></script>
+</body>
+</html>

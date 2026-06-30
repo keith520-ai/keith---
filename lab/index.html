@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实验场 · 万朗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/shared/styles.css">
+    <link rel="stylesheet" href="/shared/weather/effects.css">
+    <style>
+        .lab-card { transition: all 0.2s ease; }
+        .lab-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    <section class="min-h-screen w-full px-8 py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div class="max-w-5xl mx-auto card-fade">
+            <a href="/" class="back-link mb-12">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>返回首页</span>
+            </a>
+
+            <div class="mb-16 mt-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="page-header-num text-xs text-gray-300">04</span>
+                    <div class="w-8 h-0.5 bg-gradient-to-r from-[#A78BFA] to-[#7C3AED]"></div>
+                </div>
+                <h1 class="text-5xl font-bold text-gray-900 mb-4">实验场</h1>
+                <p class="text-gray-400 text-lg">Lab — 大胆尝试，快速验证</p>
+            </div>
+
+            <!-- 天气心情站（替代 AI 叙事生成器） -->
+            <section id="weather-mood-station" class="mb-12"></section>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="lab-card bg-white rounded-2xl p-8 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-100 to-transparent rounded-bl-full"></div>
+                    <div class="relative">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">已完成</span>
+                            <span class="text-xs text-gray-300">Experiment #002</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">社交破冰小游戏</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed mb-4">
+                            设计一个帮助陌生人快速建立连接的小游戏原型。
+                        </p>
+                        <div class="flex items-center gap-2 text-xs text-gray-400">
+                            <span class="bg-gray-100 px-2 py-1 rounded">原型</span>
+                            <span class="bg-gray-100 px-2 py-1 rounded">用户测试</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lab-card bg-white rounded-2xl p-8 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-cyan-100 to-transparent rounded-bl-full"></div>
+                    <div class="relative">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-medium">构思中</span>
+                            <span class="text-xs text-gray-300">Experiment #003</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">产品评测框架</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed mb-4">
+                            建立一套系统化的产品分析框架，用于拆解和评测各类产品。
+                        </p>
+                        <div class="flex items-center gap-2 text-xs text-gray-400">
+                            <span class="bg-gray-100 px-2 py-1 rounded">方法论</span>
+                            <span class="bg-gray-100 px-2 py-1 rounded">框架</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lab-card bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100 flex flex-col items-center justify-center text-center">
+                    <div class="text-4xl mb-4">🧪</div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">下一个实验？</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        如果你有想法，欢迎和我一起实验。好的创意值得被验证。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="/shared/nav.js"></script>
+    <script type="module" src="/shared/weather/widget.js"></script>
+</body>
+</html>

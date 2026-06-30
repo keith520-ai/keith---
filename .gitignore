@@ -1,0 +1,27 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 备份
+*-backup-*
+*.bak
+
+# 日志
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+
+# Node（如果以后用）
+node_modules/
+
+# Claude 本地配置（含本地服务器配置等）
+.claude/settings.local.json

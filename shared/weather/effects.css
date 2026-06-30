@@ -1,0 +1,567 @@
+/* ============================================================
+ * 天气心情站 · 动效层
+ * 容器 .weather-stage 内部叠加 ::before / ::after 与多层伪元素
+ * ========================================================== */
+
+.weather-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  min-height: 460px;
+  transition:
+    background 1.2s ease,
+    color 1.2s ease;
+  isolation: isolate;
+}
+
+.weather-stage .weather-effects {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+.weather-stage .weather-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================================
+ * sunny — 晴：暖色光晕 + 缓慢脉冲
+ * ========================================================== */
+.effect-sunny::before,
+.effect-sunny::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.effect-sunny::before {
+  width: 520px;
+  height: 520px;
+  top: -180px;
+  right: -120px;
+  background: radial-gradient(circle, rgba(255,235,150,0.85) 0%, rgba(255,200,80,0) 65%);
+  animation: sunPulse 8s ease-in-out infinite;
+}
+.effect-sunny::after {
+  width: 360px;
+  height: 360px;
+  bottom: -120px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(255,220,180,0.55) 0%, rgba(255,180,100,0) 70%);
+  animation: sunPulse 11s ease-in-out infinite 1.5s;
+}
+@keyframes sunPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+
+/* ============================================================
+ * sunnyNight — 晴夜：星点闪烁
+ * ========================================================== */
+.effect-stars {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%,  rgba(255,255,255,0.9) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 28% 42%, rgba(255,255,255,0.7) 50%, transparent 100%),
+    radial-gradient(1px 1px at 55% 22%,  rgba(255,255,255,0.85) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 73% 60%, rgba(255,255,255,0.75) 50%, transparent 100%),
+    radial-gradient(1px 1px at 88% 30%,  rgba(255,255,255,0.9) 50%, transparent 100%),
+    radial-gradient(1px 1px at 36% 78%,  rgba(255,255,255,0.6) 50%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 62% 85%, rgba(255,255,255,0.8) 50%, transparent 100%),
+    radial-gradient(1px 1px at 18% 65%,  rgba(255,255,255,0.7) 50%, transparent 100%);
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  from { opacity: 0.55; }
+  to   { opacity: 1; }
+}
+
+/* ============================================================
+ * cloudy — 多云：横向漂浮云带
+ * ========================================================== */
+.effect-cloudy::before,
+.effect-cloudy::after {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 140px;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+}
+.effect-cloudy::before {
+  top: 18%;
+  left: -50%;
+  background: rgba(255,255,255,0.55);
+  animation: cloudDrift 32s linear infinite;
+}
+.effect-cloudy::after {
+  bottom: 22%;
+  left: -50%;
+  background: rgba(255,255,255,0.35);
+  animation: cloudDrift 48s linear infinite reverse;
+}
+@keyframes cloudDrift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(50%); }
+}
+
+/* ============================================================
+ * foggy — 雾：浅灰雾平移
+ * ========================================================== */
+.effect-foggy::before,
+.effect-foggy::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.effect-foggy::before {
+  background:
+    radial-gradient(ellipse at 20% 40%, rgba(255,255,255,0.55), transparent 60%),
+    radial-gradient(ellipse at 70% 65%, rgba(255,255,255,0.45), transparent 60%);
+  filter: blur(20px);
+  animation: fogDrift 28s ease-in-out infinite alternate;
+}
+.effect-foggy::after {
+  background:
+    radial-gradient(ellipse at 55% 30%, rgba(220,225,235,0.45), transparent 65%);
+  filter: blur(30px);
+  animation: fogDrift 40s ease-in-out infinite alternate-reverse;
+}
+@keyframes fogDrift {
+  from { transform: translateX(-6%); }
+  to   { transform: translateX(6%); }
+}
+
+/* ============================================================
+ * rainy — 雨：多层斜线下落
+ * ========================================================== */
+.effect-rainy {
+  background-image:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0 8px,
+      rgba(180, 210, 255, 0.18) 8px 9px,
+      transparent 9px 16px
+    ),
+    repeating-linear-gradient(
+      102deg,
+      transparent 0 11px,
+      rgba(180, 210, 255, 0.13) 11px 12px,
+      transparent 12px 22px
+    );
+  background-size: 100% 220px, 100% 320px;
+  animation: rainfall 0.85s linear infinite;
+}
+@keyframes rainfall {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: -60px 220px, -40px 320px; }
+}
+
+/* 偶尔加深的雨点斑驳 */
+.effect-rainy::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 80%, rgba(0,0,0,0.18), transparent 60%),
+    radial-gradient(ellipse at 70% 20%, rgba(0,0,0,0.12), transparent 65%);
+  pointer-events: none;
+}
+
+/* ============================================================
+ * snowy — 雪：飘落的雪花
+ * 用 box-shadow trick 一次性画出几十片雪
+ * ========================================================== */
+.effect-snowy::before,
+.effect-snowy::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: none;
+}
+.effect-snowy::before {
+  box-shadow:
+    20vw -10vh 0 0 rgba(255,255,255,0.95), 35vw 0vh 0 0 rgba(255,255,255,0.85),
+    55vw -20vh 0 0 rgba(255,255,255,0.9),  75vw -5vh 0 0 rgba(255,255,255,0.8),
+    10vw -30vh 0 0 rgba(255,255,255,0.7),  45vw -40vh 0 0 rgba(255,255,255,0.95),
+    65vw -50vh 0 0 rgba(255,255,255,0.85), 90vw -25vh 0 0 rgba(255,255,255,0.9),
+    25vw -55vh 0 0 rgba(255,255,255,0.8),  82vw -38vh 0 0 rgba(255,255,255,0.7),
+    5vw -45vh 0 0 rgba(255,255,255,0.85),  50vw -60vh 0 0 rgba(255,255,255,0.95),
+    15vw -70vh 0 0 rgba(255,255,255,0.8),  72vw -65vh 0 0 rgba(255,255,255,0.85),
+    38vw -75vh 0 0 rgba(255,255,255,0.9);
+  animation: snowfall 12s linear infinite;
+}
+.effect-snowy::after {
+  width: 6px;
+  height: 6px;
+  filter: blur(0.5px);
+  box-shadow:
+    30vw -5vh 0 0 rgba(255,255,255,0.9),  60vw -15vh 0 0 rgba(255,255,255,0.85),
+    8vw -22vh 0 0 rgba(255,255,255,0.8),  88vw -8vh 0 0 rgba(255,255,255,0.9),
+    48vw -32vh 0 0 rgba(255,255,255,0.85), 22vw -42vh 0 0 rgba(255,255,255,0.7),
+    68vw -48vh 0 0 rgba(255,255,255,0.9),  95vw -55vh 0 0 rgba(255,255,255,0.8),
+    12vw -60vh 0 0 rgba(255,255,255,0.85), 42vw -68vh 0 0 rgba(255,255,255,0.95);
+  animation: snowfall 18s linear infinite 2s;
+}
+@keyframes snowfall {
+  from { transform: translateY(0); }
+  to   { transform: translateY(120vh); }
+}
+
+/* ============================================================
+ * stormy — 雷暴：暗云 + 偶发闪光
+ * ========================================================== */
+.effect-stormy {
+  background:
+    repeating-linear-gradient(
+      105deg,
+      transparent 0 6px,
+      rgba(140, 160, 200, 0.15) 6px 7px,
+      transparent 7px 14px
+    );
+  background-size: 100% 240px;
+  animation: rainfall 0.7s linear infinite;
+}
+.effect-stormy::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  pointer-events: none;
+  animation: lightning 9s ease-in infinite;
+}
+@keyframes lightning {
+  0%, 90%, 100% { opacity: 0; }
+  91%           { opacity: 0.85; }
+  92%           { opacity: 0; }
+  93%           { opacity: 0.55; }
+  94%           { opacity: 0; }
+}
+
+/* ============================================================
+ * 访客浮层
+ * ========================================================== */
+.visitor-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+.visitor-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.visitor-overlay-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  padding: 28px 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  color: #1f2937;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.visitor-overlay.is-open .visitor-overlay-card {
+  transform: translateY(0) scale(1);
+}
+
+/* ============================================================
+ * Reduced motion
+ * ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .weather-stage,
+  .weather-stage *,
+  .weather-stage *::before,
+  .weather-stage *::after {
+    animation: none !important;
+    transition: opacity 0.3s ease, background 0.3s ease !important;
+  }
+}
+
+/* ============================================================
+ * Phase 2: idle 卡片（点击启动前的默认态）
+ * ========================================================== */
+.weather-card-idle {
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 24px;
+  padding: 36px 40px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+}
+.weather-card-idle:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 50px rgba(124, 58, 237, 0.10);
+  border-color: #e9e3ff;
+}
+.weather-card-idle::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle at top right,
+              rgba(167,139,250,0.18) 0%,
+              rgba(244,114,182,0.10) 40%,
+              transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.weather-card-idle:hover::before { opacity: 1.2; }
+
+.weather-card-idle .idle-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.weather-card-idle .idle-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #7c3aed;
+  background: #f3efff;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.weather-card-idle .idle-pulse-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #7c3aed;
+  animation: idlePulse 1.8s ease-in-out infinite;
+}
+@keyframes idlePulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%      { transform: scale(1.5); opacity: 0.5; }
+}
+.weather-card-idle .idle-exp-num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: #d1d5db;
+}
+.weather-card-idle .idle-icon {
+  position: absolute;
+  top: 32px;
+  right: 36px;
+  font-size: 28px;
+  opacity: 0.85;
+  transition: transform 0.4s ease;
+}
+.weather-card-idle:hover .idle-icon {
+  transform: rotate(-8deg) scale(1.08);
+}
+.weather-card-idle .idle-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+}
+.weather-card-idle .idle-subtitle {
+  font-size: 12px;
+  color: #9ca3af;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.weather-card-idle .idle-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #6b7280;
+  margin-bottom: 20px;
+  max-width: 80%;
+}
+.weather-card-idle .idle-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #9ca3af;
+}
+.weather-card-idle .idle-tags span {
+  background: #f9fafb;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.weather-card-idle .idle-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #7c3aed;
+  transition: gap 0.25s ease;
+}
+.weather-card-idle:hover .idle-cta { gap: 12px; }
+.weather-card-idle .idle-recap {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ============================================================
+ * Phase 2: 沉浸态 —— body 接管 + 全屏动效层
+ * ========================================================== */
+.weather-fullscreen-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.weather-fullscreen-fx.is-visible { opacity: 1; }
+
+body.weather-immersed {
+  background: var(--weather-bg, #fafafa) !important;
+  transition: background 1.2s ease, color 1.2s ease;
+  position: relative;
+}
+body.weather-immersed::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--weather-overlay, transparent);
+  z-index: 0;
+  pointer-events: none;
+  transition: background 1.2s ease;
+}
+
+/* Lab 页面原 section 在沉浸态下变透明 */
+body.weather-immersed > section,
+body.weather-immersed > section.bg-gradient-to-b {
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* 浅色主题：实验卡片保持白底 */
+body.weather-immersed.theme-light .lab-card,
+body.weather-immersed.theme-light [data-lab-card] {
+  background: rgba(255,255,255,0.85) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+/* 深色主题：实验卡片需要更不透明的白底，保证黑字可读 */
+body.weather-immersed.theme-dark .lab-card,
+body.weather-immersed.theme-dark [data-lab-card] {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-color: rgba(255,255,255,0.4) !important;
+}
+
+/* 深色主题：大标题"实验场"变白 */
+body.weather-immersed.theme-dark h1,
+body.weather-immersed.theme-dark .back-link {
+  color: var(--weather-text, #fff) !important;
+}
+body.weather-immersed.theme-dark p.text-gray-400 {
+  color: rgba(255,255,255,0.7) !important;
+}
+
+/* 浅色主题（sunny 高饱和）：标题加微阴影确保可读 */
+body.weather-immersed.theme-light h1 {
+  text-shadow: 0 2px 8px rgba(255,255,255,0.4);
+}
+
+/* ============================================================
+ * Phase 2: 沉浸态主体（替代 idle 卡片，全宽展示）
+ * ========================================================== */
+.weather-immersive-shell {
+  position: relative;
+  border-radius: 28px;
+  padding: 44px 48px;
+  min-height: 360px;
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--weather-text, #1f2937);
+  overflow: hidden;
+  isolation: isolate;
+  animation: shellFadeIn 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes shellFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+body.weather-immersed.theme-dark .weather-immersive-shell {
+  background: rgba(0,0,0,0.18);
+  border-color: rgba(255,255,255,0.12);
+}
+
+/* ============================================================
+ * Phase 2: 退出沉浸按钮
+ * ========================================================== */
+.weather-exit-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--weather-text, #1f2937);
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(0,0,0,0.06);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+  animation: exitBtnIn 0.5s ease 0.4s both;
+}
+.weather-exit-btn:hover {
+  transform: scale(1.05);
+  background: rgba(255,255,255,0.9);
+}
+@keyframes exitBtnIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+body.weather-immersed.theme-dark .weather-exit-btn {
+  background: rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.95);
+}
+body.weather-immersed.theme-dark .weather-exit-btn:hover {
+  background: rgba(0,0,0,0.55);
+}

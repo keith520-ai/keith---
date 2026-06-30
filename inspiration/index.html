@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵感采集 · 万朗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/shared/styles.css">
+    <style>
+        .inspiration-card { transition: all 0.2s ease; }
+        .inspiration-card:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body class="bg-white">
+
+    <section class="min-h-screen w-full px-8 py-20 bg-white">
+        <div class="max-w-5xl mx-auto card-fade">
+            <a href="/" class="back-link mb-12">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>返回首页</span>
+            </a>
+
+            <div class="mb-16 mt-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="page-header-num text-xs text-gray-300">03</span>
+                    <div class="w-8 h-0.5 bg-gradient-to-r from-[#FFB347] to-[#FFA500]"></div>
+                </div>
+                <h1 class="text-5xl font-bold text-gray-900 mb-4">灵感采集</h1>
+                <p class="text-gray-400 text-lg">Inspiration — 日常观察与灵感碎片</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="inspiration-card bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-100 row-span-2">
+                    <div class="text-3xl mb-3">💡</div>
+                    <h4 class="font-bold text-gray-900 mb-2">产品观察笔记</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">记录日常生活中发现的有趣产品设计和交互细节，每个观察都值得深入思考。</p>
+                </div>
+                <div class="inspiration-card bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl p-6 border border-pink-100">
+                    <div class="text-3xl mb-3">📱</div>
+                    <h4 class="font-bold text-gray-900 mb-2">App 截图收藏</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">优秀的界面设计和交互模式</p>
+                </div>
+                <div class="inspiration-card bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 border border-indigo-100">
+                    <div class="text-3xl mb-3">🎨</div>
+                    <h4 class="font-bold text-gray-900 mb-2">视觉灵感</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">色彩、排版、构图的参考</p>
+                </div>
+                <div class="inspiration-card bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
+                    <div class="text-3xl mb-3">📖</div>
+                    <h4 class="font-bold text-gray-900 mb-2">书摘与金句</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">触动思维的文字片段</p>
+                </div>
+                <div class="inspiration-card bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-6 border border-violet-100 col-span-2">
+                    <div class="text-3xl mb-3">🌍</div>
+                    <h4 class="font-bold text-gray-900 mb-2">跨领域启发</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">从建筑、电影、音乐、心理学中提取的产品思维——好的创意往往来自不同领域的交叉碰撞。</p>
+                </div>
+                <div class="inspiration-card bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-100">
+                    <div class="text-3xl mb-3">🔮</div>
+                    <h4 class="font-bold text-gray-900 mb-2">趋势预测</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">技术趋势与社会变化的洞察</p>
+                </div>
+                <div class="inspiration-card bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl p-6 border border-cyan-100">
+                    <div class="text-3xl mb-3">🧩</div>
+                    <h4 class="font-bold text-gray-900 mb-2">模式识别</h4>
+                    <p class="text-gray-500 text-sm leading-relaxed">用户行为中的规律性</p>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="text-2xl">✨</div>
+                    <p class="text-gray-500 text-sm">灵感随时在发生，这里是我捕捉它们的地方。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="/shared/nav.js"></script>
+</body>
+</html>

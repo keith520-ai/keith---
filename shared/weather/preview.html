@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气心情站 · 主题预览</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="./effects.css">
+    <style>
+        body { background: #f3f4f6; }
+        .preview-stage { min-height: 320px; }
+    </style>
+</head>
+<body class="p-8">
+
+<h1 class="text-2xl font-bold text-gray-900 mb-6">天气心情站 · 主题预览</h1>
+<p class="text-gray-500 mb-8">这个页面**不依赖 Supabase**，仅用于检查各主题的视觉与动效。点击下方主题切换。</p>
+
+<div class="flex flex-wrap gap-2 mb-6" id="switcher"></div>
+
+<div id="stage" class="weather-stage preview-stage" style="min-height:420px;">
+    <div class="weather-effects" data-effect-layer></div>
+    <div class="weather-content w-full p-10 flex flex-col justify-between" style="min-height:420px;">
+        <div class="flex items-center gap-3">
+            <span class="text-4xl" id="icon">☀️</span>
+            <div>
+                <p class="text-xs tracking-[3px] uppercase opacity-60" id="label">SUNNY</p>
+                <p class="text-sm opacity-70 mt-1">更新于 14:32（示例）</p>
+            </div>
+        </div>
+        <div class="my-8">
+            <p class="text-3xl font-semibold leading-snug" id="headline">此刻，万朗在 上海，晴空万里，温度 24°C。</p>
+            <p class="text-base mt-4 opacity-80" id="mood">这种天气，写代码都格外顺</p>
+        </div>
+        <p class="text-xs opacity-50">Open-Meteo · 实时同步</p>
+    </div>
+</div>
+
+<script type="module">
+import { THEMES, codeToTheme, codeToDescription } from './themes.js';
+
+const stage = document.getElementById('stage');
+const layer = stage.querySelector('[data-effect-layer]');
+const icon = document.getElementById('icon');
+const label = document.getElementById('label');
+const headline = document.getElementById('headline');
+const mood = document.getElementById('mood');
+
+const switcher = document.getElementById('switcher');
+
+const samples = [
+    { code: 0,  isDay: true,  city: '上海', temp: 24, moodText: '这种天气，写代码都格外顺' },
+    { code: 0,  isDay: false, city: '北京', temp: 18, moodText: '夜晚的清醒最珍贵' },
+    { code: 2,  isDay: true,  city: '杭州', temp: 19, moodText: '有点想出门又有点想躺平' },
+    { code: 45, isDay: true,  city: '伦敦', temp: 8,  moodText: '雾里走路像在自己的脑子里走' },
+    { code: 63, isDay: true,  city: '南京', temp: 14, moodText: '雨声是世界自带的白噪音' },
+    { code: 75, isDay: true,  city: '哈尔滨', temp: -7, moodText: '北方下雪了想吃糖炒栗子' },
+    { code: 95, isDay: true,  city: '深圳', temp: 26, moodText: '雷雨天 BGM 自带史诗感' },
+];
+
+const labels = ['晴(日)', '晴(夜)', '多云', '雾', '雨', '雪', '雷暴'];
+
+function apply(sample, idx) {
+    const theme = codeToTheme(sample.code, sample.isDay);
+    stage.style.background = theme.bgGradient;
+    stage.style.color = theme.textColor;
+    layer.style.opacity = '0';
+    setTimeout(() => {
+        layer.className = 'weather-effects ' + theme.effectClass;
+        layer.style.opacity = '1';
+    }, 250);
+    icon.textContent = theme.icon;
+    label.textContent = theme.label.toUpperCase();
+    headline.textContent = `此刻，万朗在 ${sample.city}，${codeToDescription(sample.code)}，温度 ${sample.temp}°C。`;
+    mood.textContent = sample.moodText;
+}
+
+samples.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'px-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition';
+    btn.textContent = labels[i];
+    btn.onclick = () => apply(s, i);
+    switcher.appendChild(btn);
+});
+
+// 默认晴天
+apply(samples[0], 0);
+</script>
+
+</body>
+</html>

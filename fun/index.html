@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味互动 · 万朗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/shared/styles.css">
+    <style>
+        .fun-orb {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .fun-orb:hover { transform: scale(1.15); }
+        .fun-orb:active { transform: scale(0.9); }
+    </style>
+</head>
+<body class="bg-white">
+
+    <section class="min-h-screen w-full px-8 py-20 bg-white">
+        <div class="max-w-5xl mx-auto card-fade">
+            <a href="/" class="back-link mb-12">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>返回首页</span>
+            </a>
+
+            <div class="mb-16 mt-8">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="page-header-num text-xs text-gray-300">05</span>
+                    <div class="w-8 h-0.5 bg-gradient-to-r from-[#F472B6] to-[#EC4899]"></div>
+                </div>
+                <h1 class="text-5xl font-bold text-gray-900 mb-4">趣味互动</h1>
+                <p class="text-gray-400 text-lg">Play — 点击下面的球，发现关于我的小事</p>
+            </div>
+
+            <div class="relative bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-3xl p-12 min-h-[400px] overflow-hidden">
+                <div class="fun-orb absolute w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#FF8E72] shadow-lg flex items-center justify-center text-white text-2xl" style="top: 15%; left: 20%;" data-fact="我是一个重度咖啡爱好者 ☕">☕</div>
+                <div class="fun-orb absolute w-16 h-16 rounded-full bg-gradient-to-br from-[#4ECDC4] to-[#44A08D] shadow-lg flex items-center justify-center text-white text-xl" style="top: 25%; right: 25%;" data-fact="喜欢在设计中留白 🎨">🎨</div>
+                <div class="fun-orb absolute w-24 h-24 rounded-full bg-gradient-to-br from-[#FFB347] to-[#FFA500] shadow-lg flex items-center justify-center text-white text-3xl" style="bottom: 20%; left: 30%;" data-fact="每年读30+本书 📚">📚</div>
+                <div class="fun-orb absolute w-14 h-14 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7C3AED] shadow-lg flex items-center justify-center text-white text-lg" style="bottom: 30%; right: 20%;" data-fact="会弹吉他 🎸">🎸</div>
+                <div class="fun-orb absolute w-20 h-20 rounded-full bg-gradient-to-br from-[#F472B6] to-[#EC4899] shadow-lg flex items-center justify-center text-white text-2xl" style="top: 50%; left: 50%; transform: translate(-50%, -50%);" data-fact="相信产品的终极目标是消失 ✨">✨</div>
+                <div class="fun-orb absolute w-12 h-12 rounded-full bg-gradient-to-br from-[#60A5FA] to-[#3B82F6] shadow-lg flex items-center justify-center text-white text-base" style="top: 10%; left: 55%;" data-fact="喜欢凌晨的安静时光 🌙">🌙</div>
+
+                <p class="absolute bottom-4 left-0 right-0 text-center text-gray-400 text-sm">点击彩球，发现关于我的小秘密 👆</p>
+            </div>
+
+            <div id="funFactDisplay" class="mt-6 bg-gray-50 rounded-2xl p-8 text-center hidden transition-all">
+                <p class="text-2xl font-bold text-gray-900" id="funFactText"></p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.querySelectorAll('.fun-orb').forEach(orb => {
+            orb.addEventListener('click', () => {
+                const display = document.getElementById('funFactDisplay');
+                const text = document.getElementById('funFactText');
+                text.textContent = orb.dataset.fact;
+                display.classList.remove('hidden');
+                clearTimeout(window._funFactTimer);
+                window._funFactTimer = setTimeout(() => display.classList.add('hidden'), 3000);
+            });
+        });
+    </script>
+    <script src="/shared/nav.js"></script>
+</body>
+</html>
