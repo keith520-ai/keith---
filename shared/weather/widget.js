@@ -173,7 +173,7 @@ function buildImmersiveDom() {
         <span class="text-3xl md:text-4xl" data-weather-icon>🌤️</span>
         <div>
           <p class="text-xs tracking-[3px] uppercase opacity-60" data-weather-label>WEATHER</p>
-          <p class="text-sm opacity-70 mt-1" data-weather-fetched>正在连接…</p>
+          <p class="text-sm opacity-70 mt-1" data-weather-fetched>……</p>
         </div>
       </div>
       <button type="button" data-visitor-toggle
@@ -185,7 +185,7 @@ function buildImmersiveDom() {
 
     <div class="mb-2">
       <p class="text-2xl md:text-4xl font-semibold leading-snug" data-weather-headline>
-        正在感受天气…
+        ……
       </p>
       <p class="text-base md:text-lg mt-4 opacity-80" data-weather-mood></p>
       <p class="text-xs opacity-50 mt-6" data-mood-source>—</p>
@@ -313,12 +313,25 @@ async function refreshSnapshotForVisitor() {
 }
 
 // 沉浸态启动时的中性 loading 渲染（不应用任何天气主题，避免闪现旧天气）
+// 文案做随机化，避免每次点都看到同一句机械的"正在感受此刻的天气…"
+const LOADING_HEADLINES = [
+  '正在抬头看看天…',
+  '让我感受一下风的方向…',
+  '伸手出去，确认一下温度…',
+  '推开窗户，看看天空…',
+  '正在和云层打个招呼…',
+];
+const LOADING_FETCHED = [
+  '天气信号还在路上…',
+  '正在连接此刻的空气…',
+  '风穿过电波，再过几秒就到…',
+];
 function renderImmersiveLoading() {
   if (!immersedShellEl) return;
-  immersedShellEl.querySelector('[data-weather-headline]').textContent = '正在感受此刻的天气…';
+  immersedShellEl.querySelector('[data-weather-headline]').textContent = pickRandom(LOADING_HEADLINES);
   immersedShellEl.querySelector('[data-weather-mood]').textContent = '';
   immersedShellEl.querySelector('[data-mood-source]').textContent = '—';
-  immersedShellEl.querySelector('[data-weather-fetched]').textContent = '正在连接…';
+  immersedShellEl.querySelector('[data-weather-fetched]').textContent = pickRandom(LOADING_FETCHED);
 }
 
 // =========================
@@ -451,7 +464,15 @@ function setupVisitorOverlay(scope) {
     const theme = codeToTheme(weather.weatherCode, weather.isDay);
     const desc = codeToDescription(weather.weatherCode);
     const tempStr = weather.temperature != null ? `，温度 ${Math.round(weather.temperature)}°C` : '';
-    headline.textContent = `你在 ${weather.city || '这里'}，${desc}${tempStr}`;
+    // city 拿不到时回退：用坐标拼成"北纬 39.9°、东经 116.4° 附近"
+    let where = weather.city;
+    if (!where && weather.lat != null && weather.lon != null) {
+      const ns = weather.lat >= 0 ? '北纬' : '南纬';
+      const ew = weather.lon >= 0 ? '东经' : '西经';
+      where = `${ns} ${Math.abs(weather.lat).toFixed(1)}°、${ew} ${Math.abs(weather.lon).toFixed(1)}° 附近`;
+    }
+    if (!where) where = '你那边';
+    headline.textContent = `你在 ${where}，${desc}${tempStr}`;
     detail.textContent = `${theme.icon} ${theme.label}`;
   }
   function requestVisitorLocation() {

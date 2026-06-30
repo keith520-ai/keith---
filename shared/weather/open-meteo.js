@@ -1,9 +1,12 @@
 // Open-Meteo API 封装
 // 文档：https://open-meteo.com/en/docs
+//
+// 注：Open-Meteo 没有 reverse geocoding 端点（官方 geocoding-api 仅支持 /search）。
+//     反查城市名走 BigDataCloud client-side API（免费、无需 key、CORS 友好）。
 
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search';
-const REVERSE_URL = 'https://geocoding-api.open-meteo.com/v1/reverse';
+const REVERSE_URL = 'https://api.bigdatacloud.net/data/reverse-geocode-client';
 
 async function fetchWithTimeout(url, timeout = 8000) {
   const ctrl = new AbortController();
@@ -52,22 +55,35 @@ export async function geocodeCity(name, language = 'zh') {
 
 /**
  * 经纬度反查城市名。返回 { name, country, admin1 } 或 null。
- * 注：Open-Meteo 的 reverse geocoding 仅支持英文，但能给到行政区层级。
+ *
+ * 使用 BigDataCloud 的 reverse-geocode-client 端点：免费、无需 key、支持 CORS。
+ * 返回字段优先级：locality > city > principalSubdivision（省/州）。
+ * language 接受 'zh' / 'en' 等，BigDataCloud 用 `localityLanguage` 参数。
  */
 export async function reverseGeocode(lat, lon, language = 'zh') {
-  try {
-    const url = `${REVERSE_URL}?latitude=${lat}&longitude=${lon}&language=${language}&count=1`;
-    const data = await fetchWithTimeout(url);
-    const r = data.results && data.results[0];
-    if (!r) return null;
-    return {
-      name: r.name,
-      country: r.country || '',
-      admin1: r.admin1 || '',
-    };
-  } catch {
-    return null;
+  async function tryLang(lang) {
+    try {
+      const url = `${REVERSE_URL}?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`;
+      const data = await fetchWithTimeout(url);
+      // BigDataCloud 字段：city / locality / principalSubdivision / countryName
+      const name = data.city || data.locality || data.principalSubdivision || '';
+      if (!name) return null;
+      return {
+        name,
+        country: data.countryName || '',
+        admin1: data.principalSubdivision || '',
+      };
+    } catch {
+      return null;
+    }
   }
+  const primary = await tryLang(language);
+  if (primary) return primary;
+  if (language !== 'en') {
+    const fallback = await tryLang('en');
+    if (fallback) return fallback;
+  }
+  return null;
 }
 
 /**
@@ -78,11 +94,13 @@ export async function fetchByCoords(lat, lon) {
     getCurrentWeather(lat, lon),
     reverseGeocode(lat, lon),
   ]);
+  // city 名优先使用 name，name 缺失时用 admin1（省/州）兜底
+  const cityName = place ? (place.name || place.admin1 || '') : '';
   return {
     ...weather,
     lat,
     lon,
-    city: place ? place.name : '',
+    city: cityName,
     country: place ? place.country : '',
   };
 }
