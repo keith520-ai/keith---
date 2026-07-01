@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 8000;
-const ROOT = path.join(__dirname, '..'); // 项目根目录（个人项目/）
+const ROOT = __dirname; // 网站根目录（个人项目/网站/）
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

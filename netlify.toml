@@ -1,58 +1,9 @@
 # Netlify configuration for 万朗's resume website
-# Static site deployment with SPA routing support
+# Static site deployment
 
 [build]
-  # No build step needed - this is a pure static site
   command = "echo 'Static site ready for deployment'"
-  # Publish directory - the root contains all HTML files
   publish = "."
-
-# Environment variables (add as needed)
-[build.environment]
-  # NODE_ENV = "production"
-
-# 英文路径 → 中文目录 映射（保留 URL 稳定性）
-[[redirects]]
-  from = "/story/*"
-  to = "/故事/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/projects/*"
-  to = "/项目/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/inspiration/*"
-  to = "/灵感/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/lab/*"
-  to = "/实验/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/fun/*"
-  to = "/趣味互动/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/thoughts/*"
-  to = "/思考/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/shared/*"
-  to = "/共享/:splat"
-  status = 200
-
-# SPA fallback：其他未匹配路径回首页
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
 
 # Cache control headers
 [[headers]]
