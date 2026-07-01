@@ -11,7 +11,43 @@
 [build.environment]
   # NODE_ENV = "production"
 
-# Redirects for SPA routing - all unmatched routes go to index.html
+# 英文路径 → 中文目录 映射（保留 URL 稳定性）
+[[redirects]]
+  from = "/story/*"
+  to = "/故事/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/projects/*"
+  to = "/项目/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/inspiration/*"
+  to = "/灵感/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/lab/*"
+  to = "/实验/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/fun/*"
+  to = "/趣味互动/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/thoughts/*"
+  to = "/思考/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/shared/*"
+  to = "/共享/:splat"
+  status = 200
+
+# SPA fallback：其他未匹配路径回首页
 [[redirects]]
   from = "/*"
   to = "/index.html"
