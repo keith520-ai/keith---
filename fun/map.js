@@ -94,10 +94,20 @@
 
     // 中国分省地图
     async function loadChinaMap() {
-        const url = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+        // 优先本地，兜底阿里云
+        const urls = [
+            '/fun/geo/china.json',
+            'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json'
+        ];
         try {
-            const resp = await fetch(url);
-            const data = await resp.json();
+            let data = null;
+            for (const url of urls) {
+                try {
+                    const resp = await fetch(url);
+                    if (resp.ok) { data = await resp.json(); break; }
+                } catch (_) { /* 尝试下一个 */ }
+            }
+            if (!data) throw new Error('all sources failed');
             document.getElementById('cnLoading').classList.add('hidden');
             const proj = makeMercator(1000, 720, 720, 104, 36);
             const g = document.getElementById('cnProvinces');
@@ -137,13 +147,20 @@
     let worldLoaded = false;
     async function loadWorldMap() {
         if (worldLoaded) return;
-        const url = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json';
-        const namesUrl = 'https://cdn.jsdelivr.net/npm/i18n-iso-countries@7.10.0/langs/en.json';
+        // 优先本地，兜底外网
+        const urls = [
+            '/fun/geo/world.json',
+            'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
+        ];
         try {
-            // countries-50m 是 topojson，需要转换 —— 改用一个 GeoJSON 源更省事
-            const geoUrl = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson';
-            const resp = await fetch(geoUrl);
-            const data = await resp.json();
+            let data = null;
+            for (const url of urls) {
+                try {
+                    const resp = await fetch(url);
+                    if (resp.ok) { data = await resp.json(); break; }
+                } catch (_) { /* 尝试下一个 */ }
+            }
+            if (!data) throw new Error('all sources failed');
             document.getElementById('worldLoading').classList.add('hidden');
             const proj = makeMercator(1000, 500, 155, 0, 20);
             const g = document.getElementById('worldCountries');
