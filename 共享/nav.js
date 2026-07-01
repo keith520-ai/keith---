@@ -47,6 +47,10 @@
     style.id = 'navStyles';
     style.textContent = `
       .nav-bar {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 50;
         display: flex;
         align-items: center;
         gap: 6px;
