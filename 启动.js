@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 8000;
-const ROOT = __dirname; // 仓库根目录就是网站根目录
+const ROOT = path.join(__dirname, '..'); // 项目根目录（个人项目/）
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',

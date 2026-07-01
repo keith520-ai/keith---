@@ -1,0 +1,44 @@
+# Netlify configuration for 万朗's resume website
+# Static site deployment with SPA routing support
+
+[build]
+  # No build step needed - this is a pure static site
+  command = "echo 'Static site ready for deployment'"
+  # Publish directory - the root contains all HTML files
+  publish = "."
+
+# Environment variables (add as needed)
+[build.environment]
+  # NODE_ENV = "production"
+
+# Redirects for SPA routing - all unmatched routes go to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+# Cache control headers
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "max-age=3600, public"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "max-age=1800, must-revalidate"
+
+[[headers]]
+  for = "/shared/*"
+  [headers.values]
+    Cache-Control = "max-age=86400, public"
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"

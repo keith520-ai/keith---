@@ -1,0 +1,594 @@
+        .fun-orb {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .fun-orb:hover { transform: scale(1.15); }
+        .fun-orb:active { transform: scale(0.9); }
+
+        /* 互动按钮 —— 横排、无边框、悬浮胶囊风 */
+        .action-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px 10px 12px;
+            border-radius: 999px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: visible;
+        }
+        .action-btn:hover { transform: translateY(-2px); }
+        .action-btn:active { transform: translateY(0) scale(0.94); }
+        .action-btn .icon {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 14px -4px rgba(0,0,0,0.15);
+        }
+        .action-btn:hover .icon {
+            transform: scale(1.12) rotate(-6deg);
+            box-shadow: 0 8px 22px -6px rgba(0,0,0,0.25);
+        }
+        .action-btn .label {
+            font-weight: 600;
+            color: #4b5563;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+        .action-btn:hover .label { color: #111827; }
+        .action-btn .count {
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .btn-like .icon { background: linear-gradient(135deg, #60A5FA, #3B82F6); color: white; }
+        .btn-heart .icon { background: linear-gradient(135deg, #F472B6, #EC4899); color: white; }
+        /* 让踩一脚按钮成为定位锚点 */
+        .btn-kick { position: relative; }
+        .btn-kick .icon { background: linear-gradient(135deg, #FBBF24, #F59E0B); color: white; }
+        .btn-comment .icon { background: linear-gradient(135deg, #34D399, #10B981); color: white; }
+
+        /* 数字弹跳 */
+        @keyframes countPop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.35); color: #EC4899; }
+            100% { transform: scale(1); }
+        }
+        .count.pop { animation: countPop 0.4s ease-out; }
+
+        /* 通用飘浮特效 */
+        .fx-particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 28px;
+            z-index: 999;
+            user-select: none;
+            will-change: transform, opacity;
+        }
+        @keyframes floatUp {
+            0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+            15% { opacity: 1; }
+            100% { transform: translate(calc(-50% + var(--dx, 0px)), -180px) scale(1.2) rotate(var(--rot, 0deg)); opacity: 0; }
+        }
+        .fx-particle.float { animation: floatUp 1.4s cubic-bezier(0.15, 0.85, 0.35, 1) forwards; }
+
+        /* 抖动 */
+        @keyframes shakeX {
+            0%,100% { transform: translateX(0); }
+            20% { transform: translateX(-8px) rotate(-1deg); }
+            40% { transform: translateX(8px) rotate(1deg); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+        .shake { animation: shakeX 0.5s ease-in-out; }
+
+        /* 3D 反击小人 —— 单一人物，飞踢→坐上黄色图标 */
+        .kickback {
+            position: absolute;
+            /* 屁股大约落在黄色图标上缘往下 8px */
+            bottom: calc(100% - 22px);
+            left: 33px;   /* 图标水平中心：按钮内边距 12 + 图标半宽 21 */
+            width: 120px;
+            height: 150px;
+            transform: translate(-50%, 0) scale(0.4);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
+            perspective: 400px;
+        }
+        .kickback svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+        /* 容器：从远处飞入 → 特写朝观众踢 → 落坐到黄色图标上（全程 translate 都以 -50% 为基准，避免跳跃） */
+        @keyframes kickInSit {
+            0%   { transform: translate(calc(-50% + 80px), -40px) scale(0.3) rotate(-25deg); opacity: 0; }
+            10%  { transform: translate(calc(-50% + 50px), -25px) scale(0.55) rotate(-18deg); opacity: 1; }
+            22%  { transform: translate(calc(-50% + 20px), -10px) scale(0.95) rotate(-8deg); opacity: 1; }
+            35%  { transform: translate(-50%, -4px) scale(1.15) rotate(0deg); opacity: 1; }
+            42%  { transform: translate(-50%, 0) scale(1.18) rotate(0deg); opacity: 1; }
+            50%  { transform: translate(-50%, 6px) scale(1.08) rotate(0deg); opacity: 1; }
+            58%  { transform: translate(-50%, 12px) scale(1.02, 0.92) rotate(0deg); opacity: 1; }
+            64%  { transform: translate(-50%, 10px) scale(0.98, 1.03) rotate(0deg); opacity: 1; }
+            70%  { transform: translate(-50%, 11px) scale(1, 1) rotate(0deg); opacity: 1; }
+            94%  { transform: translate(-50%, 11px) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%, -5px) scale(0.9) rotate(0deg); opacity: 0; }
+        }
+        .kickback.show { animation: kickInSit 6s cubic-bezier(0.34, 1.2, 0.5, 1) forwards; }
+
+        /* 腿部：飞踢阶段朝前伸(scale放大+朝下移)，坐下阶段自然下垂 */
+        @keyframes legKick {
+            0%,15%  { transform: translate(0, 20px) scale(1.5, 1.2); }  /* 飞踢：脚朝观众放大 */
+            35%     { transform: translate(0, 22px) scale(1.6, 1.25); }  /* 特写峰值 */
+            50%     { transform: translate(0, 18px) scale(1.2, 1.05); }
+            58%,100%{ transform: translate(0, 0) scale(1, 1); }           /* 坐下：腿自然下垂 */
+        }
+        .kickback.show [data-part="legs"] { animation: legKick 6s cubic-bezier(0.34, 1.2, 0.5, 1) forwards; transform-origin: 60px 70px; }
+
+        /* 冲击特效仅飞踢阶段可见 */
+        @keyframes kickFx {
+            0%,15%  { opacity: 0; transform: scale(0.6); }
+            22%,42% { opacity: 1; transform: scale(1); }
+            55%     { opacity: 0; transform: scale(1.2); }
+            100%    { opacity: 0; }
+        }
+        .kickback.show [data-part="fx"] { animation: kickFx 6s ease-out forwards; transform-origin: 60px 110px; }
+
+        /* 头部略前倾（飞踢时）→ 正坐（落地后） */
+        @keyframes headTilt {
+            0%,15%  { transform: rotate(15deg) translate(0, 4px); }
+            35%     { transform: rotate(12deg) translate(0, 3px); }
+            58%,100%{ transform: rotate(0deg) translate(0, 0); }
+        }
+        .kickback.show [data-part="head"] { animation: headTilt 6s ease-out forwards; transform-origin: 60px 40px; }
+
+        /* 手臂：飞踢时向后甩，坐下后放腿上 */
+        @keyframes armSwing {
+            0%,15%  { transform: rotate(-25deg); }
+            35%     { transform: rotate(-22deg); }
+            58%,100%{ transform: rotate(0deg); }
+        }
+        .kickback.show [data-part="arms"] { animation: armSwing 6s ease-out forwards; transform-origin: 60px 62px; }
+
+        /* 头顶怒气蒸汽（只在坐下之后飘出） */
+        @keyframes steamPuff {
+            0%,55%  { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            65%     { opacity: 0.85; transform: translate(calc(-50% + var(--sx, 0px)), -8px) scale(0.9); }
+            95%     { opacity: 0; transform: translate(calc(-50% + var(--sx, 0px)), -22px) scale(1.1); }
+            100%    { opacity: 0; }
+        }
+        .steam {
+            position: absolute;
+            top: -2px;
+            font-size: 11px;
+            opacity: 0;
+        }
+        .kickback.show .steam { animation: steamPuff 6s ease-out forwards; }
+
+        .speech-bubble {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 18px;
+            color: #EF4444;
+            white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid white;
+        }
+
+        /* 评论气泡列表 */
+        .comment-panel {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 320px;
+            max-height: 60vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.2);
+            z-index: 998;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .comment-panel.show { display: flex; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .comment-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #374151;
+            animation: itemFade 0.4s ease-out;
+        }
+        @keyframes itemFade {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .comment-item:last-child { border-bottom: none; }
+        .comment-item .who { font-weight: 700; color: #10B981; margin-right: 8px; }
+
+        /* ============ 攻略地图（高级感版） ============ */
+        .map-wrap-pro {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            /* 参考图取色：黑 #0F0F12 略偏冷，粉 #D9377C 亚光玫粉 */
+            background:
+                radial-gradient(ellipse at 15% 8%, rgba(217,55,124,0.08), transparent 55%),
+                radial-gradient(ellipse at 85% 92%, rgba(217,55,124,0.05), transparent 60%),
+                linear-gradient(135deg, #0F0F12 0%, #16161b 50%, #0F0F12 100%);
+            border: 1px solid rgba(217,55,124,0.14);
+            box-shadow:
+                0 30px 60px -20px rgba(0,0,0,0.6),
+                inset 0 1px 0 rgba(255,255,255,0.03),
+                inset 0 0 60px rgba(217,55,124,0.04);
+        }
+        /* 磨砂颗粒质感：细密噪点 + 微弱网格 */
+        .map-wrap-pro::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(circle at 25% 30%, rgba(255,255,255,0.025) 0.6px, transparent 1px),
+                radial-gradient(circle at 75% 70%, rgba(255,255,255,0.02) 0.6px, transparent 1px),
+                linear-gradient(rgba(217,55,124,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(217,55,124,0.035) 1px, transparent 1px);
+            background-size: 3px 3px, 4px 4px, 42px 42px, 42px 42px;
+            mask-image: radial-gradient(ellipse at center, black 40%, transparent 92%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 92%);
+            mix-blend-mode: overlay;
+        }
+        /* 玫粉角光斑 */
+        .map-wrap-pro::after {
+            content: '';
+            position: absolute;
+            top: -80px; left: -80px;
+            width: 220px; height: 220px;
+            background: radial-gradient(circle, rgba(217,55,124,0.14), transparent 65%);
+            pointer-events: none;
+        }
+        .map-canvas-pro {
+            position: relative;
+            padding: 28px 32px 60px;
+            min-height: 520px;
+        }
+        .map-header-bar {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+        .map-title-cn {
+            color: #D9377C;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .map-subtitle-cn {
+            color: rgba(255,255,255,0.35);
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        .map-svg-pro {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(241,245,249,0.4);
+            font-size: 12px;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+        .map-loading.hidden { display: none; }
+        .map-legend-pro {
+            position: absolute;
+            left: 32px;
+            bottom: 24px;
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+            color: rgba(241,245,249,0.5);
+            letter-spacing: 1px;
+        }
+        .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot-visited { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 0 8px rgba(245,158,11,0.6); }
+        .dot-plain   { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); }
+
+        /* 省份 path —— 参考图哑光玫粉 #D9377C */
+        .province {
+            fill: url(#cnLandGrad);
+            stroke: rgba(15,15,18,0.85);
+            stroke-width: 0.6;
+            stroke-linejoin: round;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            filter: drop-shadow(0 0 3px rgba(217,55,124,0.14));
+        }
+        .province:hover {
+            fill: #D9377C;
+            stroke: #F084AF;
+            stroke-width: 1;
+            filter: drop-shadow(0 0 12px rgba(217,55,124,0.5));
+        }
+        .province.visited {
+            fill: url(#cnVisitedGrad);
+            stroke: rgba(240,132,175,0.85);
+            filter: url(#cnGlow);
+        }
+        .province-label {
+            font-size: 9px;
+            fill: #0F0F12;
+            font-weight: 700;
+            pointer-events: none;
+            text-anchor: middle;
+            paint-order: stroke;
+            stroke: rgba(255,255,255,0.55);
+            stroke-width: 2px;
+            stroke-linejoin: round;
+            letter-spacing: -0.3px;
+        }
+        .province-label.visited {
+            fill: #0F0F12;
+            stroke: rgba(255,255,255,0.7);
+            font-weight: 800;
+        }
+
+        /* 国家 path（世界地图） */
+        .country {
+            fill: url(#worldLandGrad);
+            stroke: rgba(148,163,184,0.3);
+            stroke-width: 0.4;
+            stroke-linejoin: round;
+            transition: all 0.3s ease;
+        }
+        .country.clickable { cursor: pointer; }
+        .country.clickable:hover { fill: #f59e0b; }
+        .country.visited {
+            fill: url(#cnVisitedGrad);
+            cursor: pointer;
+        }
+
+        /* 3D 旋转地球按钮 */
+        .globe-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 78px; height: 78px;
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            z-index: 5;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .globe-btn:hover { transform: scale(1.12); }
+        .globe-btn:active { transform: scale(0.94); }
+
+        .globe-shell {
+            position: relative;
+            width: 100%; height: 100%;
+        }
+        /* 大气光晕（蓝色地球halo） */
+        .globe-glow {
+            position: absolute;
+            inset: -14%;
+            border-radius: 50%;
+            background: radial-gradient(circle at center,
+                rgba(56,189,248,0.42) 40%,
+                rgba(56,189,248,0.18) 55%,
+                rgba(56,189,248,0) 70%);
+            filter: blur(4px);
+            animation: haloPulse 4s ease-in-out infinite;
+        }
+        @keyframes haloPulse {
+            0%,100% { opacity: 0.8; transform: scale(1); }
+            50%     { opacity: 1;   transform: scale(1.06); }
+        }
+        /* 球体，做地板阴影 */
+        .globe-sphere {
+            position: relative;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            filter:
+                drop-shadow(0 8px 14px rgba(0,0,0,0.55))
+                drop-shadow(0 0 24px rgba(56,189,248,0.35));
+        }
+        .globe-sphere svg { width: 100%; height: 100%; display: block; }
+
+        /* 陆地平移已由 SVG SMIL 处理，无需 CSS */
+        /* 经纬网整体轻微反向漂移，加强 3D 错位感 */
+        .globe-grid { animation: gridDrift 18s linear infinite; transform-origin: 50px 50px; }
+        @keyframes gridDrift {
+            from { transform: scale(1, 1); }
+            50%  { transform: scale(0.98, 1); }
+            to   { transform: scale(1, 1); }
+        }
+
+        /* 全球地图 Modal */
+        .globe-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.75);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1400;
+            padding: 24px;
+        }
+        .globe-modal.show { display: flex; animation: modalFade 0.3s ease; }
+        .globe-modal-inner {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            background: linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #101a2e 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 28px 32px 60px;
+            min-height: 560px;
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.6);
+            animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .globe-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(241,245,249,0.7);
+            border-radius: 50%;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.25s;
+            z-index: 10;
+        }
+        .globe-close:hover { background: rgba(255,255,255,0.14); color: #fff; transform: rotate(90deg); }
+
+        /* 城市标点（高级感） */
+        .pin-pro {
+            cursor: pointer;
+        }
+        .pin-pro .pin-pulse {
+            transform-origin: center;
+            animation: pinPulse 2s ease-out infinite;
+        }
+        @keyframes pinPulse {
+            0%   { transform: scale(1);   opacity: 0.6; }
+            100% { transform: scale(3);   opacity: 0; }
+        }
+        .pin-pro .pin-core {
+            fill: #fbbf24;
+            filter: drop-shadow(0 0 6px rgba(251,191,36,0.8));
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .pin-pro:hover .pin-core { transform: scale(1.5); transform-origin: center; transform-box: fill-box; }
+        .pin-pro .pin-name-bg {
+            fill: rgba(15,23,42,0.9);
+            stroke: rgba(251,191,36,0.4);
+            stroke-width: 0.6;
+        }
+        .pin-pro .pin-name {
+            fill: #fbbf24;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        /* 攻略详情弹窗（暗色主题） */
+        .guide-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.75);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1600;
+            padding: 20px;
+        }
+        .guide-modal.show { display: flex; animation: modalFade 0.25s ease; }
+        @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalPop {
+            from { transform: translateY(20px) scale(0.95); opacity: 0; }
+            to   { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .guide-modal-inner {
+            background: linear-gradient(135deg, #0f172a 0%, #131b30 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 620px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+            animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .guide-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(241,245,249,0.7);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .guide-close:hover { background: rgba(255,255,255,0.14); color: #fff; transform: rotate(90deg); }
+        .guide-hero {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 32px 32px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .guide-emoji {
+            font-size: 34px;
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.15));
+            border: 1px solid rgba(245,158,11,0.3);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .guide-loc {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f8fafc;
+            letter-spacing: 0.5px;
+        }
+        .guide-when { color: rgba(241,245,249,0.4); font-size: 11px; letter-spacing: 1px; }
+        .guide-body { padding: 28px 32px 36px; color: rgba(241,245,249,0.75); }
+        .guide-empty {
+            text-align: center;
+            padding: 40px 0;
+            color: rgba(241,245,249,0.4);
+        }
+        .guide-empty p { color: rgba(241,245,249,0.55); font-size: 13px; line-height: 1.7; }
+
