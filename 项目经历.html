@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目经历 - 万朗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* ===== 页面头部 ===== */
+        .page-header {
+            margin-bottom: 48px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        /* ===== 公司卡片网格 ===== */
+        .companies-section {
+            margin-bottom: 48px;
+        }
+
+        .companies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+            max-height: 320px;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .companies-grid.expanded {
+            max-height: none;
+        }
+
+        /* 公司卡片 */
+        .company-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .company-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #a78bfa 0%, #7c3aed 100%);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .company-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .company-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .company-card.active {
+            border-color: #a78bfa;
+            background: white;
+            box-shadow: 0 4px 16px rgba(167, 139, 250, 0.12);
+        }
+
+        /* 公司Logo */
+        .company-logo {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+        }
+
+        .company-logo.logo-qyer {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E72 100%);
+        }
+
+        .company-logo.logo-ctrip {
+            background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+        }
+
+        .company-logo.logo-mashangsm {
+            background: linear-gradient(135deg, #FFB347 0%, #FFA500 100%);
+        }
+
+        .company-logo.logo-zhenjiang {
+            background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%);
+        }
+
+        .company-logo i {
+            color: white;
+            font-size: 20px;
+        }
+
+        /* 公司信息 */
+        .company-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .company-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .company-position {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .company-duration {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* 展开按钮 */
+        .show-more-btn {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .show-more-btn button {
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #1a1a2e;
+            padding: 10px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .show-more-btn button:hover {
+            border-color: #a78bfa;
+            color: #7c3aed;
+            box-shadow: 0 2px 8px rgba(167, 139, 250, 0.1);
+        }
+
+        /* ===== 公司详情面板 ===== */
+        .company-detail {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 0;
+            margin-bottom: 40px;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.5s ease, opacity 0.3s ease;
+            opacity: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .company-detail.show {
+            max-height: 3000px;
+            opacity: 1;
+        }
+
+        /* 详情头部 */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 28px 32px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .detail-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #d1d5db;
+            transition: color 0.2s ease;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detail-close:hover {
+            color: #9ca3af;
+        }
+
+        /* 部门信息卡片 */
+        .department-info {
+            background: #f9fafb;
+            border-left: 3px solid #a78bfa;
+            padding: 20px;
+            margin: 32px;
+            border-radius: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #1a1a2e;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            color: #4b5563;
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        /* ===== 项目列表 ===== */
+        .projects-section {
+            padding: 0 32px 32px 32px;
+        }
+
+        .projects-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .projects-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 项目卡片 */
+        .project-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .project-card:hover {
+            border-color: #d1d5db;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .project-card.expanded {
+            border-color: #a78bfa;
+            background: white;
+            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.08);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .project-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a2e;
+            flex: 1;
+        }
+
+        .project-role {
+            font-size: 12px;
+            color: #7c3aed;
+            background: #ede9fe;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin: 0 12px;
+            font-weight: 500;
+        }
+
+        .project-toggle {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d1d5db;
+            transition: transform 0.3s ease, color 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .project-card.expanded .project-toggle {
+            transform: rotate(180deg);
+            color: #a78bfa;
+        }
+
+        /* ===== STAR 详情 ===== */
+        .star-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .project-card.expanded .star-detail {
+            max-height: 2000px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .star-section {
+            margin-bottom: 16px;
+        }
+
+        .star-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .star-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #7c3aed;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .star-label::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 12px;
+            background: #a78bfa;
+            border-radius: 1px;
+        }
+
+        .star-content {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #4b5563;
+            padding-left: 0;
+            border-left: none;
+            margin-left: 0;
+        }
+
+        .metrics {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .metric-badge {
+            background: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #4b5563;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+        }
+
+        .metric-badge.positive {
+            background: #ede9fe;
+            color: #7c3aed;
+            border-color: #ddd6fe;
+        }
+
+        /* ===== 动画 ===== */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .company-card {
+            animation: fadeInDown 0.6s ease backwards;
+        }
+
+        .company-card:nth-child(1) { animation-delay: 0.1s; }
+        .company-card:nth-child(2) { animation-delay: 0.15s; }
+        .company-card:nth-child(3) { animation-delay: 0.2s; }
+        .company-card:nth-child(4) { animation-delay: 0.25s; }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 16px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .companies-grid {
+                grid-template-columns: 1fr;
+                max-height: 500px;
+            }
+
+            .detail-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .detail-close {
+                align-self: flex-end;
+            }
+
+            .department-info {
+                margin: 24px 20px;
+                padding: 16px;
+            }
+
+            .projects-section {
+                padding: 0 20px 20px 20px;
+            }
+
+            .project-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .project-role {
+                margin: 0;
+                order: -1;
+                flex-basis: 100%;
+            }
+
+            .company-card {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .company-logo {
+                align-self: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <h1 class="page-title">项目经历</h1>
+            <p class="page-subtitle">用STAR法则展现核心项目成果 · 用数据说话</p>
+        </div>
+
+        <!-- 公司列表 -->
+        <div class="companies-section">
+            <div class="companies-grid" id="companiesGrid">
+                <!-- 动态渲染 -->
+            </div>
+            <div class="show-more-btn">
+                <button id="expandBtn" onclick="toggleCompanies()">展开更多公司</button>
+            </div>
+        </div>
+
+        <!-- 公司详情面板 -->
+        <div class="company-detail" id="companyDetail">
+            <!-- 动态渲染 -->
+        </div>
+    </div>
+
+    <script>
+        // ============ 数据结构 ============
+        const companiesData = [
+            {
+                id: 'qyer',
+                name: '去哪儿网',
+                position: '产品经理实习',
+                duration: '2023.05 - 2023.09',
+                visible: true,
+                logo: 'logo-qyer',
+                logoIcon: 'fas fa-plane',
+                department: {
+                    title: '交易与订单部门',
+                    responsibilities: '负责订单侧和流量侧产品设计，涉及用户旅程优化、营销策略制定等',
+                    upstream: '营销部、数据部、设计部',
+                    downstream: '开发部、运营部、客服部'
+                },
+                projects: [
+                    {
+                        name: '行程卡改版',
+                        role: '主导',
+                        situation: '订单详情页行程卡信息密度高，用户查找核心信息耗时长，订单详情页平均停留时间低于行业平均水平20%',
+                        action: '通过用户研究识别高频查询项（出发时间、目的地、确认状态），重新设计卡片布局，采用分层展示：核心信息置顶、二级信息可收纳、三级信息在详情页，同时优化字体大小和间距提升可读性',
+                        result: '用户查询时间降低38%，订单详情页停留时间提升25%，客服投诉率下降15%'
+                    },
+                    {
+                        name: '优惠提示词优化',
+                        role: '参与',
+                        situation: '用户对可用优惠缺乏感知，订单支付时常出现"不知道有优惠"的反馈，优惠使用率仅60%',
+                        action: '分析订单流程中的关键节点，设计场景化提示：支付页面前置提示、失效倒计时警告、个性化优惠推荐，使用A/B测试验证文案效果',
+                        result: '优惠使用率提升到85%，订单复购率上升12%'
+                    },
+                    {
+                        name: '好车捡漏功能',
+                        role: '主导',
+                        situation: '用户对低价高质车源的需求强烈但发现难度高，市场上缺少有效的"捡漏"机制，用户跳转到竞品的频率较高',
+                        action: '设计"好车捡漏"功能：基于用户历史浏览、预算范围和偏好，实时推送符合条件的低价优质车源。采用Push+邮件+App内信息流的多渠道触达策略',
+                        result: '新用户转化率提升18%，老用户复购周期缩短22天，用户留存率上升8%'
+                    },
+                    {
+                        name: '病毒营销活动',
+                        role: '主导',
+                        situation: '流量侧需要低成本获取新用户，传统营销ROI遇到瓶颈，社交分享率很低（<5%）',
+                        action: '设计基于分享激励的病毒循环：用户分享链接邀请好友，每成功邀请1人获得优惠券，被邀请者首单也有优惠，形成"分享→领券→消费→再分享"的链条。同时配合明星代言内容提升吸引力',
+                        result: '营销活动触及用户数增长280%，新用户拉新成本降低65%，活动期间日新增用户峰值达到平时的6倍'
+                    }
+                ]
+            },
+            {
+                id: 'ctrip',
+                name: '携程',
+                position: '产品经理',
+                duration: '待补充',
+                visible: true,
+                logo: 'logo-ctrip',
+                logoIcon: 'fas fa-hotel',
+                department: {
+                    title: '度假产品部门',
+                    responsibilities: '负责度假产品的整体规划和优化',
+                    upstream: '市场部、商家管理部',
+                    downstream: '技术部、运营部'
+                },
+                projects: [
+                    {
+                        name: '项目待补充',
+                        role: '待定',
+                        situation: '待补充项目背景',
+                        action: '待补充解决方案',
+                        result: '待补充核心指标'
+                    }
+                ]
+            },
+            {
+                id: 'mashangsm',
+                name: '马上消费金融',
+                position: '产品经理',
+                duration: '待补充',
+                visible: true,
+                logo: 'logo-mashangsm',
+                logoIcon: 'fas fa-credit-card',
+                department: {
+                    title: '金融科技部门',
+                    responsibilities: '负责消费金融产品设计',
+                    upstream: '风控部、市场部',
+                    downstream: '技术部、运营部'
+                },
+                projects: [
+                    {
+                        name: '项目待补充',
+                        role: '待定',
+                        situation: '待补充项目背景',
+                        action: '待补充解决方案',
+                        result: '待补充核心指标'
+                    }
+                ]
+            },
+            {
+                id: 'zhenjiang',
+                name: '镇江花升教育',
+                position: '创始人',
+                duration: '2020.06 - 2021.12',
+                visible: false,
+                logo: 'logo-zhenjiang',
+                logoIcon: 'fas fa-graduation-cap',
+                department: {
+                    title: '教育运营',
+                    responsibilities: '教育产品设计与运营',
+                    upstream: '教师团队、家长反馈',
+                    downstream: '技术开发、市场推广'
+                },
+                projects: [
+                    {
+                        name: '在线教学平台搭建',
+                        role: '主导',
+                        situation: '疫情期间线下教育受阻，需要快速搭建线上教学平台以保持业务连续性',
+                        action: '采用低代码方案快速迭代，设计了实时互动课堂、作业批改、学情反馈等核心功能',
+                        result: '2周内完成平台搭建，第一个月在线教学覆盖学生500+，家长满意度达到88%'
+                    }
+                ]
+            }
+        ];
+
+        // ============ 全局状态 ============
+        let activeCompanyId = null;
+        let expandedProjectId = null;
+
+        // ============ 初始化 ============
+        function init() {
+            renderCompanies();
+        }
+
+        // ============ 渲染公司列表 ============
+        function renderCompanies() {
+            const grid = document.getElementById('companiesGrid');
+            const visibleCompanies = companiesData.filter(c => c.visible);
+
+            grid.innerHTML = visibleCompanies.map(company => `
+                <div class="company-card ${activeCompanyId === company.id ? 'active' : ''}"
+                     onclick="selectCompany('${company.id}')">
+                    <div class="company-logo ${company.logo}">
+                        <i class="${company.logoIcon}"></i>
+                    </div>
+                    <div class="company-info">
+                        <div class="company-name">${company.name}</div>
+                        <div class="company-position">${company.position}</div>
+                        <div class="company-duration">${company.duration}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============ 选择公司 ============
+        function selectCompany(companyId) {
+            activeCompanyId = activeCompanyId === companyId ? null : companyId;
+            renderCompanies();
+            renderCompanyDetail();
+        }
+
+        // ============ 渲染公司详情 ============
+        function renderCompanyDetail() {
+            const detailPanel = document.getElementById('companyDetail');
+
+            if (!activeCompanyId) {
+                detailPanel.classList.remove('show');
+                setTimeout(() => {
+                    detailPanel.innerHTML = '';
+                }, 300);
+                return;
+            }
+
+            const company = companiesData.find(c => c.id === activeCompanyId);
+
+            detailPanel.innerHTML = `
+                <div class="detail-header">
+                    <div class="detail-title">${company.name} · ${company.position}</div>
+                    <button class="detail-close" onclick="selectCompany('${company.id}')">×</button>
+                </div>
+
+                <div class="department-info">
+                    <div class="info-row">
+                        <div class="info-label">部门职能</div>
+                        <div class="info-value">${company.department.title}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">核心职责</div>
+                        <div class="info-value">${company.department.responsibilities}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">上游协作</div>
+                        <div class="info-value">${company.department.upstream}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">下游协作</div>
+                        <div class="info-value">${company.department.downstream}</div>
+                    </div>
+                </div>
+
+                <div class="projects-section">
+                    <div class="projects-title">代表项目 (${company.projects.length})</div>
+                    <div class="projects-list">
+                        ${company.projects.map((project, idx) => renderProjectCard(company.id, idx, project)).join('')}
+                    </div>
+                </div>
+            `;
+
+            detailPanel.classList.add('show');
+        }
+
+        // ============ 项目卡片HTML ============
+        function renderProjectCard(companyId, projectIdx, project) {
+            const projectKey = `${companyId}-${projectIdx}`;
+            const isExpanded = expandedProjectId === projectKey;
+
+            return `
+                <div class="project-card ${isExpanded ? 'expanded' : ''}"
+                     onclick="toggleProject('${projectKey}')">
+                    <div class="project-header">
+                        <div class="project-name">${project.name}</div>
+                        <div class="project-role">${project.role}</div>
+                        <div class="project-toggle">▼</div>
+                    </div>
+
+                    <div class="star-detail">
+                        <div class="star-section">
+                            <div class="star-label">Situation 情景</div>
+                            <div class="star-content">${project.situation}</div>
+                        </div>
+
+                        <div class="star-section">
+                            <div class="star-label">Action 行动</div>
+                            <div class="star-content">${project.action}</div>
+                        </div>
+
+                        <div class="star-section">
+                            <div class="star-label">Result 结果</div>
+                            <div class="star-content">
+                                ${project.result}
+                                <div class="metrics">
+                                    <div class="metric-badge positive">✓ 核心指标提升</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============ 切换项目展开 ============
+        function toggleProject(projectKey) {
+            expandedProjectId = expandedProjectId === projectKey ? null : projectKey;
+            renderCompanyDetail();
+        }
+
+        // ============ 切换公司显示 ============
+        function toggleCompanies() {
+            const grid = document.getElementById('companiesGrid');
+            const btn = document.getElementById('expandBtn');
+            const isExpanded = grid.classList.contains('expanded');
+
+            // 切换隐藏公司的可见性
+            companiesData.forEach(c => {
+                if (!c.visible) c.visible = !isExpanded;
+            });
+
+            grid.classList.toggle('expanded');
+            btn.textContent = isExpanded ? '展开更多公司' : '收起公司';
+
+            renderCompanies();
+        }
+
+        // ============ 初始化 ============
+        init();
+    </script>
+</body>
+</html>
