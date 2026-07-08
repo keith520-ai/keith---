@@ -37,6 +37,5 @@ dist/
 # 旧版文件（已并入新页面）
 experience.html
 
-# 本地敏感配置
+# 本地工具脚本
 启动.js
-shared/weather/config.local.js
