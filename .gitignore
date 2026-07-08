@@ -33,3 +33,6 @@ dist/
 # Environment files (if needed in the future)
 .env.local
 .env*.local
+
+# 旧版文件（已并入新页面）
+experience.html
