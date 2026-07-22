@@ -5,27 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>趣味互动 · 万朗</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/shared/styles.css">
     <link rel="stylesheet" href="/fun/styles.css">
     <script defer src="/fun/interactions.js"></script>
     <script defer src="/fun/map.js"></script>
 </head>
-<body class="bg-white">
+<body>
 
-    <section class="min-h-screen w-full px-8 py-20 bg-white">
+    <section class="min-h-screen w-full px-6 md:px-10 py-20 bg-white">
         <div class="max-w-6xl mx-auto card-fade">
-            <a href="/" class="back-link mb-12">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                <span>返回首页</span>
-            </a>
-
             <div class="mb-12 mt-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <span class="page-header-num text-xs text-gray-300">05</span>
                         <div class="w-8 h-0.5 bg-gradient-to-r from-[#F472B6] to-[#EC4899]"></div>
                     </div>
-                    <h1 class="text-5xl font-bold text-gray-900 mb-4">趣味互动</h1>
+                    <h1 class="text-5xl font-bold text-gray-900 mb-4" style="font-family:'Playfair Display',Georgia,serif;">趣味互动</h1>
                     <p class="text-gray-400 text-lg">Play — 点击彩球发现小秘密，试试右边的互动按钮</p>
                 </div>
 
@@ -233,7 +231,7 @@
                         <span class="page-header-num text-xs text-gray-300 tracking-widest">06 · MAP</span>
                         <div class="w-8 h-0.5 bg-gradient-to-r from-slate-400 to-slate-800"></div>
                     </div>
-                    <h2 class="text-4xl font-bold text-gray-900 mb-2 tracking-tight">Footprints</h2>
+                    <h2 class="text-4xl font-bold text-gray-900 mb-2 tracking-tight" style="font-family:'Playfair Display',Georgia,serif;">Footprints</h2>
                     <p class="text-gray-400 text-sm">点击省份，查看我在那片土地的亲身感受</p>
                 </div>
 
@@ -485,6 +483,6 @@
         <div id="commentList" class="comment-list max-h-64 overflow-y-auto"></div>
     </div>
 
-    <script src="/shared/nav.js"></script>
+    <script src="/shared/nav.js?v=4"></script>
 </body>
 </html>

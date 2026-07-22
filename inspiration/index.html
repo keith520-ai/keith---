@@ -1,81 +1,706 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>灵感采集 · 万朗</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/shared/styles.css">
-    <style>
-        .inspiration-card { transition: all 0.2s ease; }
-        .inspiration-card:hover { transform: scale(1.02); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵感采集 · 万朗</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/shared/styles.css">
+<style>
+  body { background: #fff; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+  .masonry { columns: 3 240px; column-gap: 1.25rem; }
+  .masonry > * { break-inside: avoid; margin-bottom: 1.25rem; }
+  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; overflow: hidden; transition: border-color 0.2s; cursor: pointer; }
+  .card:hover { border-color: #aaa; }
+  .card img, .card video { width: 100%; display: block; }
+  .card-body { padding: 12px 16px; }
+  .card-title { font-size: 0.88rem; font-weight: 600; color: #111; }
+  .card-tag { display: inline-block; font-size: 0.62rem; color: #888; background: #f5f5f5; padding: 1px 6px; border-radius: 3px; margin: 5px 3px 0 0; }
+  .card-meta { font-size: 0.62rem; color: #aaa; margin-top: 5px; display: flex; justify-content: space-between; }
+
+  .btn { padding: 8px 22px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; font-size: 0.8rem; color: #333; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { border-color: #111; }
+  .btn-dark { background: #111; color: #fff; border-color: #111; }
+  .btn-dark:hover { background: #333; }
+  .btn-sm { padding: 5px 14px; font-size: 0.72rem; }
+  .btn.active { background: #111; color: #fff; border-color: #111; }
+
+  /* 拖拽覆盖层 */
+  .drop-overlay {
+    position: fixed; inset: 0; z-index: 998; background: rgba(255,255,255,0.92);
+    display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .drop-overlay.show { opacity: 1; pointer-events: auto; }
+  .drop-target { border: 2px dashed #111; border-radius: 8px; padding: 60px 80px; text-align: center; }
+
+  /* 预览遮罩 */
+  .preview-overlay {
+    position: fixed; inset: 0; z-index: 999; background: rgba(255,255,255,0.97);
+    display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .preview-overlay.show { opacity: 1; pointer-events: auto; }
+  .preview-card {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 32px; max-width: 500px; width: 92%;
+    text-align: center; box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  }
+  .preview-card img { max-width: 100%; max-height: 45vh; border-radius: 4px; border: 1px solid #eee; }
+
+  /* 编辑遮罩 */
+  .edit-overlay {
+    position: fixed; inset: 0; z-index: 999; background: rgba(255,255,255,0.98);
+    display: flex; align-items: flex-start; justify-content: center; padding-top: 40px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s; overflow-y: auto;
+  }
+  .edit-overlay.show { opacity: 1; pointer-events: auto; }
+  .edit-panel {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; padding: 28px; max-width: 560px; width: 94%;
+  }
+  .tool-preview { position: relative; display: inline-block; max-width: 100%; }
+  .tool-preview canvas { max-width: 100%; border: 1px solid #e5e5e5; border-radius: 4px; }
+  .crop-box { position: absolute; border: 2px dashed #111; z-index: 5; cursor: move; display: none; }
+  .crop-h { position: absolute; width: 8px; height: 8px; background: #fff; border: 2px solid #111; border-radius: 50%; z-index: 6; }
+  .crop-h.tl { top: -4px; left: -4px; cursor: nw-resize; }
+  .crop-h.tr { top: -4px; right: -4px; cursor: ne-resize; }
+  .crop-h.bl { bottom: -4px; left: -4px; cursor: sw-resize; }
+  .crop-h.br { bottom: -4px; right: -4px; cursor: se-resize; }
+
+  .lightbox { position: fixed; inset: 0; z-index: 1000; background: rgba(255,255,255,0.97); display: flex; align-items: center; justify-content: center; cursor: zoom-out; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .lightbox.open { opacity: 1; pointer-events: auto; }
+  .lightbox img, .lightbox video { max-width: 90vw; max-height: 90vh; object-fit: contain; }
+  .lightbox-close { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ddd; background: #fff; color: #333; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .lightbox-close:hover { border-color: #111; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1001; background: #111; color: #fff; padding: 8px 20px; border-radius: 4px; font-size: 0.78rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 640px) { .masonry { columns: 2 150px; } }
+</style>
 </head>
-<body class="bg-white">
+<body>
 
-    <section class="min-h-screen w-full px-8 py-20 bg-white">
-        <div class="max-w-5xl mx-auto card-fade">
-            <a href="/" class="back-link mb-12">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                <span>返回首页</span>
-            </a>
+<section class="min-h-screen px-4 md:px-6 py-16 bg-white" id="mainPage">
+<div class="max-w-5xl mx-auto">
 
-            <div class="mb-16 mt-8">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="page-header-num text-xs text-gray-300">03</span>
-                    <div class="w-8 h-0.5 bg-gradient-to-r from-[#FFB347] to-[#FFA500]"></div>
-                </div>
-                <h1 class="text-5xl font-bold text-gray-900 mb-4">灵感采集</h1>
-                <p class="text-gray-400 text-lg">Inspiration — 日常观察与灵感碎片</p>
-            </div>
+  <div class="mt-6 mb-8">
+    <div class="flex items-center gap-3 mb-3"><span class="text-xs text-gray-300 font-mono">03</span><div class="w-8 h-0.5 bg-[#d1d5db]"></div></div>
+    <div class="flex items-end justify-between gap-4">
+      <div><h1 class="text-[2.2rem] font-bold text-[#111] mb-1">灵感采集</h1><p id="itemCount" class="text-sm text-[#999]"></p></div>
+      <div class="text-xs text-[#999]">拖拽图片到页面任意位置即可添加灵感</div>
+    </div>
+  </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div class="inspiration-card bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-100 row-span-2">
-                    <div class="text-3xl mb-3">💡</div>
-                    <h4 class="font-bold text-gray-900 mb-2">产品观察笔记</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">记录日常生活中发现的有趣产品设计和交互细节，每个观察都值得深入思考。</p>
-                </div>
-                <div class="inspiration-card bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl p-6 border border-pink-100">
-                    <div class="text-3xl mb-3">📱</div>
-                    <h4 class="font-bold text-gray-900 mb-2">App 截图收藏</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">优秀的界面设计和交互模式</p>
-                </div>
-                <div class="inspiration-card bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 border border-indigo-100">
-                    <div class="text-3xl mb-3">🎨</div>
-                    <h4 class="font-bold text-gray-900 mb-2">视觉灵感</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">色彩、排版、构图的参考</p>
-                </div>
-                <div class="inspiration-card bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
-                    <div class="text-3xl mb-3">📖</div>
-                    <h4 class="font-bold text-gray-900 mb-2">书摘与金句</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">触动思维的文字片段</p>
-                </div>
-                <div class="inspiration-card bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-6 border border-violet-100 col-span-2">
-                    <div class="text-3xl mb-3">🌍</div>
-                    <h4 class="font-bold text-gray-900 mb-2">跨领域启发</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">从建筑、电影、音乐、心理学中提取的产品思维——好的创意往往来自不同领域的交叉碰撞。</p>
-                </div>
-                <div class="inspiration-card bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl p-6 border border-amber-100">
-                    <div class="text-3xl mb-3">🔮</div>
-                    <h4 class="font-bold text-gray-900 mb-2">趋势预测</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">技术趋势与社会变化的洞察</p>
-                </div>
-                <div class="inspiration-card bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl p-6 border border-cyan-100">
-                    <div class="text-3xl mb-3">🧩</div>
-                    <h4 class="font-bold text-gray-900 mb-2">模式识别</h4>
-                    <p class="text-gray-500 text-sm leading-relaxed">用户行为中的规律性</p>
-                </div>
-            </div>
+  <!-- 瀑布流 -->
+  <div class="masonry" id="gallery"></div>
 
-            <div class="mt-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                <div class="flex items-center gap-3">
-                    <div class="text-2xl">✨</div>
-                    <p class="text-gray-500 text-sm">灵感随时在发生，这里是我捕捉它们的地方。</p>
-                </div>
-            </div>
-        </div>
-    </section>
+</div>
+</section>
 
-    <script src="/shared/nav.js"></script>
+<!-- 拖拽覆盖层 -->
+<div class="drop-overlay" id="dropOverlay">
+  <div class="drop-target">
+    <div class="text-3xl mb-2">📁</div>
+    <p class="text-sm text-[#666]">释放图片以添加灵感</p>
+  </div>
+</div>
+
+<!-- 预览遮罩（保存/修改） -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-card" style="position:relative;">
+    <button onclick="closePreview()" style="position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:1px solid #ddd;background:#fff;color:#999;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    <h3 class="text-sm font-semibold text-[#111] mb-3">选择分类</h3>
+    <div class="flex flex-wrap gap-1.5 mb-4" id="previewCategories"></div>
+    <img id="previewImg" src="" alt="Preview" style="display:block;margin:0 auto;">
+    <div class="flex items-start gap-2 mt-3">
+      <textarea id="previewNote" class="flex-1 px-3 py-2 border border-[#e5e5e5] rounded text-sm focus:outline-none focus:border-[#111]" rows="3" placeholder="灵光一现…"></textarea>
+      <button class="btn btn-sm" onclick="generateNote()" title="基于分类生成灵光一现" style="flex-shrink:0;">✨</button>
+    </div>
+    <div class="flex gap-3 mt-4 justify-center">
+      <button class="btn btn-dark" onclick="keepItem()">保留</button>
+      <button class="btn" onclick="openEditor()">裁剪 & 擦除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑遮罩 -->
+<div class="edit-overlay" id="editOverlay">
+  <div class="edit-panel">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-semibold text-[#111]">编辑素材</h3>
+      <button onclick="closeEditor()" class="text-[#999] hover:text-[#111] text-lg leading-none">&times;</button>
+    </div>
+
+    <div class="tool-preview" id="editPreviewWrap">
+      <canvas id="editCanvas"></canvas>
+      <div class="crop-box" id="cropBox">
+        <div class="crop-h tl" data-dir="tl"></div><div class="crop-h tr" data-dir="tr"></div>
+        <div class="crop-h bl" data-dir="bl"></div><div class="crop-h br" data-dir="br"></div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-1.5 mt-3">
+      <button class="btn btn-sm active" data-etool="crop" onclick="setEditTool('crop')">裁剪</button>
+      <button class="btn btn-sm" data-etool="erase" onclick="setEditTool('erase')">擦除</button>
+      <select id="eraseModeSel" onchange="eraseModeVal=this.value" class="btn btn-sm" style="appearance:auto;"><option value="blur">模糊</option><option value="fill">纯色填充</option><option value="cut">裁切</option></select>
+      <input type="range" id="brushSlider" min="5" max="50" value="18" class="hidden" style="width:60px;" oninput="brushSize=parseInt(this.value)">
+      <button class="btn btn-sm" onclick="undoErase()">↩ 撤销</button>
+    </div>
+
+    <div class="flex gap-2 mt-3" id="editCropActions" style="display:none;">
+      <button class="btn btn-dark btn-sm" onclick="applyCrop()">应用裁剪</button>
+      <button class="btn btn-sm" onclick="cancelCrop()">取消</button>
+    </div>
+
+    <input type="text" id="infoTitle" class="w-full mt-3 px-3 py-2 border border-[#e5e5e5] rounded text-sm focus:outline-none focus:border-[#111]" placeholder="标题">
+    <div class="flex flex-wrap gap-1 mt-2" id="tagChips"></div>
+    <textarea id="infoNote" class="w-full mt-2 px-3 py-2 border border-[#e5e5e5] rounded text-sm focus:outline-none focus:border-[#111]" rows="2" placeholder="个人感悟（可选）"></textarea>
+
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-dark flex-1" onclick="keepItem()">保留</button>
+      <button class="btn flex-1" onclick="closeEditor()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 灯箱 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&#10005;</button>
+  <div style="display:flex;align-items:flex-start;gap:40px;max-width:90vw;max-height:85vh;">
+    <img id="lightboxImg" src="" style="max-width:58vw;max-height:80vh;object-fit:contain;border-radius:4px;background:#fafafa;">
+    <div id="lightboxNote" style="max-width:260px;font-size:0.82rem;color:#555;line-height:1.8;text-align:left;overflow-y:auto;max-height:80vh;padding-right:8px;"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 画廊数据 =====
+let galleryItems = [], localItems = [];
+const isOwner = window.location.search.includes('edit');
+const STORAGE_KEY = 'inspiration_locals_v2';
+try { const s = localStorage.getItem(STORAGE_KEY); if (s) localItems = JSON.parse(s); } catch(e) {}
+function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(localItems)); } catch(e) { showToast('存储空间不足'); } }
+
+(async function() {
+  const res = await fetch('/inspiration.json');
+  galleryItems = await res.json();
+  galleryItems.sort((a, b) => new Date(b.date) - new Date(a.date));
+  renderGallery();
+})();
+
+function renderGallery() {
+  const all = [...localItems, ...galleryItems];
+  all.sort((a, b) => new Date(b.date) - new Date(a.date));
+  document.getElementById('itemCount').textContent = `${all.length} 条灵感`;
+  document.getElementById('gallery').innerHTML = all.map(i => `
+    <div class="card" onclick="openLightbox('${i.id}')" style="position:relative;">
+      ${i.type === 'image'
+        ? `<img src="${i.thumb||i.src}" alt="${i.title}" loading="lazy" onload="this.style.opacity='1'" style="opacity:0;transition:opacity .3s;">`
+        : `<video src="${i.src}" muted preload="metadata" loading="lazy"></video>`}
+      <div class="card-body">
+        <div class="card-title">${i.title}</div>
+        <div class="card-meta"><span>${i.date}</span></div>
+      </div>
+      ${isOwner ? `<button onclick="event.stopPropagation();deleteItem('${i.id}')" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.9);color:#999;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;" title="删除">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+// ===== 拖拽上传 =====
+const mainPage = document.getElementById('mainPage');
+const dropOverlay = document.getElementById('dropOverlay');
+let dragCounter = 0;
+
+document.addEventListener('dragenter', e => { e.preventDefault(); dragCounter++; if (dragCounter === 1) dropOverlay.classList.add('show'); });
+document.addEventListener('dragleave', e => { dragCounter--; if (dragCounter === 0) dropOverlay.classList.remove('show'); });
+document.addEventListener('dragover', e => { e.preventDefault(); });
+
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  dragCounter = 0;
+  dropOverlay.classList.remove('show');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (file.type.startsWith('image/')) processImage(file);
+  else if (file.type.startsWith('video/')) processVideo(file);
+  else showToast('仅支持图片和视频');
+});
+
+// Also allow click-to-upload
+mainPage.addEventListener('click', function(e) {
+  if (e.target.closest('.card') || e.target.closest('a') || e.target.closest('button')) return;
+  // Don't auto-trigger on gallery click
+});
+
+// ===== AI 配置 =====
+const AI_FUNCTION_URL = 'https://ibqhaclnuueghnipwvvd.supabase.co/functions/v1/generate-inspiration-note';
+
+// ===== 图片处理 =====
+let originalImage = null, workingData = null, currentEditTool = 'crop';
+let brushSize = 18, eraseModeVal = 'blur';
+let cropRect = { x: 0, y: 0, w: 0, h: 0 };
+let isDragging = false, isResizing = false, resizeDir = '';
+let dragStart = {}, cropStart = {};
+let eraseMaskCanvas = null, eraseMaskCtx = null;
+let eraseHistory = [];
+const selectedTags = [];
+const presetTags = ['UI设计', '3D', '网页', '建筑', '摄影', '产品', '动效', '空间', '交互设计'];
+const DESIGN_CATEGORIES = ['光影层次','色彩关系','材质触感','空间构成','排版节奏','几何秩序','暗调氛围','自然肌理','留白呼吸','渐变过渡','对比张力','破坏重构'];
+let selectedCategory = '';
+
+function processImage(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      originalImage = img;
+      autoProcessAndPreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function autoProcessAndPreview() {
+  // Scale down
+  const maxW = 460;
+  const scale = maxW / originalImage.width;
+  const h = Math.round(originalImage.height * scale);
+
+  // Create working canvas
+  const wc = document.createElement('canvas');
+  wc.width = maxW; wc.height = h;
+  const wctx = wc.getContext('2d');
+  wctx.drawImage(originalImage, 0, 0, maxW, h);
+
+  // Auto clean
+  autoClean(wctx, wc, maxW, h);
+
+  // Store working data
+  workingData = { canvas: document.createElement('canvas'), ctx: null };
+  workingData.canvas.width = wc.width;
+  workingData.canvas.height = wc.height;
+  workingData.ctx = workingData.canvas.getContext('2d');
+  workingData.ctx.drawImage(wc, 0, 0);
+
+  // Update working data
+  const imgData = workingData.ctx.getImageData(0, 0, workingData.canvas.width, workingData.canvas.height);
+
+  // Show preview
+  const previewImg = document.getElementById('previewImg');
+  const dataUrl = workingData.canvas.toDataURL('image/webp', 0.85);
+  previewImg.src = dataUrl;
+  document.getElementById('previewOverlay').classList.add('show');
+
+  // Reset form
+  document.getElementById('infoTitle').value = '';
+  document.getElementById('infoNote').value = '';
+  document.getElementById('previewNote').value = 'AI 分析中...';
+  selectedTags.length = 0;
+  selectedCategory = '';
+  renderTagChips();
+  renderPreviewCategories();
+
+  // Call AI to generate note
+  callAIForNote(dataUrl);
+}
+
+// Video/GIF: skip processing, save directly
+function processVideo(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    document.getElementById('previewImg').src = dataUrl;
+    // Create a 1x1 working canvas for video items (placeholder)
+    const c = document.createElement('canvas'); c.width = 400; c.height = 300;
+    workingData = { canvas: c, ctx: c.getContext('2d') };
+    // Save the file type
+    workingData._fileType = file.type;
+    workingData._dataUrl = dataUrl;
+    document.getElementById('previewOverlay').classList.add('show');
+    selectedCategory = ''; document.getElementById('previewNote').value = '';
+    renderPreviewCategories();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function callAIForNote(dataUrl) {
+  try {
+    const base64 = dataUrl.split(',')[1];
+    const resp = await fetch(AI_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64: base64, mediaType: 'image/webp' })
+    });
+    if (!resp.ok) throw new Error('API error');
+    const result = await resp.json();
+    if (result.category && DESIGN_CATEGORIES.includes(result.category)) {
+      selectedCategory = result.category;
+      renderPreviewCategories();
+    }
+    if (result.note) {
+      document.getElementById('previewNote').value = result.note;
+    }
+    showToast('AI 灵感已生成 ✨');
+  } catch (e) {
+    console.log('AI note generation failed, using template fallback:', e.message);
+    document.getElementById('previewNote').value = '';
+    showToast('图片已就绪，选分类生成灵感 ✨');
+  }
+}
+
+function autoClean(ctx, canvas, w, h) {
+  const data = ctx.getImageData(0, 0, w, h).data;
+  function px(x, y) { const i = (y*w+x)*4; return { r: data[i], g: data[i+1], b: data[i+2] }; }
+  function isEdge(p) { return Math.abs(p.r-p.g) < 25 && Math.abs(p.g-p.b) < 25 && (p.r < 40 || p.r > 215); }
+
+  let top = 0, bot = h-1, left = 0, right = w-1;
+
+  for (let y = 0; y < h * 0.4; y++) { let c = 0, t = 0;
+    for (let x = 0; x < w; x += 8) { if (!isEdge(px(x, y))) c++; t++; }
+    if (c/t > 0.35) { top = Math.max(0, y-2); break; }
+  }
+  for (let y = h-1; y > h * 0.6; y--) { let c = 0, t = 0;
+    for (let x = 0; x < w; x += 8) { if (!isEdge(px(x, y))) c++; t++; }
+    if (c/t > 0.35) { bot = Math.min(h-1, y+2); break; }
+  }
+  for (let x = 0; x < w * 0.4; x++) { let c = 0, t = 0;
+    for (let y = 0; y < h; y += 8) { if (!isEdge(px(x, y))) c++; t++; }
+    if (c/t > 0.35) { left = Math.max(0, x-2); break; }
+  }
+  for (let x = w-1; x > w * 0.6; x--) { let c = 0, t = 0;
+    for (let y = 0; y < h; y += 8) { if (!isEdge(px(x, y))) c++; t++; }
+    if (c/t > 0.35) { right = Math.min(w-1, x+2); break; }
+  }
+
+  if (right-left > 40 && bot-top > 40 && (left > 2 || top > 2 || right < w-3 || bot < h-3)) {
+    const cropped = ctx.getImageData(left, top, right-left, bot-top);
+    canvas.width = right-left; canvas.height = bot-top;
+    ctx.putImageData(cropped, 0, 0);
+  }
+}
+
+// ===== 编辑面板 =====
+window.openEditor = function() {
+  document.getElementById('infoTitle').value = selectedCategory || '';
+  document.getElementById('infoNote').value = document.getElementById('previewNote').value;
+  document.getElementById('previewOverlay').classList.remove('show');
+  document.getElementById('editOverlay').classList.add('show');
+
+  const canvas = document.getElementById('editCanvas');
+  canvas.width = workingData.canvas.width;
+  canvas.height = workingData.canvas.height;
+  canvas.getContext('2d').putImageData(workingData.ctx.getImageData(0, 0, canvas.width, canvas.height), 0, 0);
+
+  eraseMaskCanvas = document.createElement('canvas');
+  eraseMaskCanvas.width = canvas.width;
+  eraseMaskCanvas.height = canvas.height;
+  eraseMaskCtx = eraseMaskCanvas.getContext('2d');
+  eraseHistory = [];
+
+  initCropBox();
+  setEditTool('crop');
+  bindErase(canvas);
+};
+
+window.closeEditor = function() {
+  document.getElementById('editOverlay').classList.remove('show');
+  document.getElementById('previewOverlay').classList.add('show');
+};
+
+// ===== 裁剪 =====
+function initCropBox() {
+  const w = document.getElementById('editCanvas').width, h = document.getElementById('editCanvas').height;
+  const m = Math.min(w, h) * 0.05;
+  cropRect = { x: m, y: m, w: w-m*2, h: h-m*2 };
+  updateCropUI();
+}
+
+function updateCropUI() {
+  const box = document.getElementById('cropBox');
+  box.style.left = cropRect.x + 'px'; box.style.top = cropRect.y + 'px';
+  box.style.width = cropRect.w + 'px'; box.style.height = cropRect.h + 'px';
+}
+
+window.setEditTool = function(t) {
+  currentEditTool = t;
+  document.querySelectorAll('[data-etool]').forEach(b => b.classList.toggle('active', b.dataset.etool === t));
+  document.getElementById('cropBox').style.display = t === 'crop' ? 'block' : 'none';
+  document.getElementById('editCropActions').style.display = t === 'crop' ? 'flex' : 'none';
+  document.getElementById('brushSlider').classList.toggle('hidden', t !== 'erase');
+};
+
+document.getElementById('cropBox').addEventListener('mousedown', function(e) {
+  if (currentEditTool !== 'crop') return;
+  if (e.target.classList.contains('crop-h')) { isResizing = true; resizeDir = e.target.dataset.dir; }
+  else { isDragging = true; }
+  dragStart = { x: e.clientX, y: e.clientY }; cropStart = { ...cropRect };
+  e.preventDefault(); e.stopPropagation();
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isDragging && !isResizing) return;
+  const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+  const cw = document.getElementById('editCanvas').width, ch = document.getElementById('editCanvas').height;
+  if (isDragging) {
+    cropRect.x = Math.max(0, Math.min(cw - cropRect.w, cropStart.x + dx));
+    cropRect.y = Math.max(0, Math.min(ch - cropRect.h, cropStart.y + dy));
+  } else {
+    if (resizeDir.includes('r')) cropRect.w = Math.max(20, Math.min(cw - cropRect.x, cropStart.w + dx));
+    if (resizeDir.includes('l')) { const nx = Math.max(0, cropStart.x + dx); cropRect.w = Math.max(20, cropStart.w - (nx - cropStart.x)); cropRect.x = nx; }
+    if (resizeDir.includes('b')) cropRect.h = Math.max(20, Math.min(ch - cropRect.y, cropStart.h + dy));
+    if (resizeDir.includes('t')) { const ny = Math.max(0, cropStart.y + dy); cropRect.h = Math.max(20, cropStart.h - (ny - cropStart.y)); cropRect.y = ny; }
+  }
+  updateCropUI();
+});
+
+document.addEventListener('mouseup', function() { isDragging = false; isResizing = false; });
+
+window.applyCrop = function() {
+  const canvas = document.getElementById('editCanvas');
+  const ctx = canvas.getContext('2d');
+  const cropped = ctx.getImageData(cropRect.x, cropRect.y, cropRect.w, cropRect.h);
+  canvas.width = cropRect.w; canvas.height = cropRect.h;
+  ctx.putImageData(cropped, 0, 0);
+  updateWorkingFromCanvas(canvas);
+  document.getElementById('cropBox').style.display = 'none';
+  document.getElementById('editCropActions').style.display = 'none';
+  setEditTool('clean');
+  showToast('裁剪已应用');
+};
+
+window.cancelCrop = function() {
+  document.getElementById('cropBox').style.display = 'none';
+  document.getElementById('editCropActions').style.display = 'none';
+  setEditTool('clean');
+};
+
+// ===== 擦除 =====
+function bindErase(canvas) {
+  let erasing = false, lx = 0, ly = 0;
+  canvas.onmousedown = function(e) {
+    if (currentEditTool !== 'erase') return;
+    erasing = true;
+    const r = canvas.getBoundingClientRect();
+    lx = (e.clientX - r.left) * (canvas.width / r.width);
+    ly = (e.clientY - r.top) * (canvas.height / r.height);
+    eraseDot(lx, ly);
+    updateErasePreview(canvas);
+  };
+  canvas.onmousemove = function(e) {
+    if (!erasing) return;
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (canvas.width / r.width);
+    const y = (e.clientY - r.top) * (canvas.height / r.height);
+    eraseLine(lx, ly, x, y);
+    lx = x; ly = y;
+    updateErasePreview(canvas);
+  };
+  canvas.onmouseup = canvas.onmouseleave = function() { if (erasing) { erasing = false; saveErase(); } };
+}
+
+function eraseDot(x, y) { eraseMaskCtx.fillStyle = 'rgba(255,0,0,0.5)'; eraseMaskCtx.beginPath(); eraseMaskCtx.arc(x, y, brushSize/2, 0, Math.PI*2); eraseMaskCtx.fill(); }
+function eraseLine(x1, y1, x2, y2) { eraseMaskCtx.strokeStyle = 'rgba(255,0,0,0.5)'; eraseMaskCtx.lineWidth = brushSize; eraseMaskCtx.lineCap = 'round'; eraseMaskCtx.beginPath(); eraseMaskCtx.moveTo(x1, y1); eraseMaskCtx.lineTo(x2, y2); eraseMaskCtx.stroke(); }
+
+function saveErase() {
+  eraseHistory.push(eraseMaskCtx.getImageData(0, 0, eraseMaskCanvas.width, eraseMaskCanvas.height));
+  if (eraseHistory.length > 20) eraseHistory.shift();
+}
+
+window.undoErase = function() {
+  if (eraseHistory.length < 2) { eraseMaskCtx.clearRect(0, 0, eraseMaskCanvas.width, eraseMaskCanvas.height); updateErasePreview(document.getElementById('editCanvas')); return; }
+  eraseHistory.pop();
+  eraseMaskCtx.putImageData(eraseHistory[eraseHistory.length-1], 0, 0);
+  updateErasePreview(document.getElementById('editCanvas'));
+};
+
+function updateErasePreview(canvas) {
+  const w = canvas.width, h = canvas.height;
+  const ctx = canvas.getContext('2d');
+  const src = workingData.ctx.getImageData(0, 0, w, h);
+  const mask = eraseMaskCtx.getImageData(0, 0, w, h);
+  ctx.putImageData(src, 0, 0);
+
+  const imgData = ctx.getImageData(0, 0, w, h);
+  if (eraseModeVal === 'cut') { for (let i = 0; i < mask.data.length; i += 4) { if (mask.data[i] > 50) imgData.data[i+3] = 0; } }
+  else if (eraseModeVal === 'fill') { for (let i = 0; i < mask.data.length; i += 4) { if (mask.data[i] > 50) { imgData.data[i] = 235; imgData.data[i+1] = 235; imgData.data[i+2] = 235; } } }
+  else {
+    const r = Math.max(1, Math.floor(brushSize/3)), copy = new Uint8ClampedArray(imgData.data);
+    for (let y = r; y < h-r; y++) for (let x = r; x < w-r; x++) {
+      const idx = (y*w+x)*4;
+      if (mask.data[idx] > 50) { let rr=0,gg=0,bb=0,c=0;
+        for (let dy=-r;dy<=r;dy++) for (let dx=-r;dx<=r;dx++) { const ni=((y+dy)*w+(x+dx))*4; rr+=copy[ni];gg+=copy[ni+1];bb+=copy[ni+2];c++; }
+        imgData.data[idx]=rr/c;imgData.data[idx+1]=gg/c;imgData.data[idx+2]=bb/c;
+      }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  ctx.save(); ctx.globalAlpha = 0.3; ctx.drawImage(eraseMaskCanvas, 0, 0); ctx.restore();
+}
+
+function updateWorkingFromCanvas(canvas) {
+  workingData.canvas.width = canvas.width; workingData.canvas.height = canvas.height;
+  workingData.ctx = workingData.canvas.getContext('2d');
+  workingData.ctx.drawImage(canvas, 0, 0);
+  eraseMaskCanvas = document.createElement('canvas');
+  eraseMaskCanvas.width = canvas.width; eraseMaskCanvas.height = canvas.height;
+  eraseMaskCtx = eraseMaskCanvas.getContext('2d');
+  eraseHistory = [];
+}
+
+// Tags (editor panel)
+function renderTagChips() {
+  document.getElementById('tagChips').innerHTML = presetTags.map(t =>
+    `<button class="btn btn-sm ${selectedTags.includes(t)?'active':''}" onclick="tg('${t}')" style="font-size:0.65rem;">${t}</button>`
+  ).join('');
+}
+
+// Categories (preview panel)
+function renderPreviewCategories() {
+  document.getElementById('previewCategories').innerHTML = DESIGN_CATEGORIES.map(c =>
+    `<button class="btn btn-sm ${selectedCategory===c?'active':''}" onclick="pickCategory('${c}')" style="font-size:0.68rem;">${c}</button>`
+  ).join('');
+}
+
+window.pickCategory = function(c) {
+  selectedCategory = selectedCategory === c ? '' : c;
+  renderPreviewCategories();
+  if (selectedCategory) generateNote();
+};
+
+window.tg = function(t) { const i = selectedTags.indexOf(t); i >= 0 ? selectedTags.splice(i, 1) : selectedTags.push(t); renderTagChips(); };
+
+// ===== 灵光一现模板生成 =====
+const NOTE_BY_CATEGORY = {
+  '光影层次': [
+    '注意这张图里光源的位置和方向——阴影的软硬、长度、方向全由它决定。界面卡片只需要一个光源方向',
+    '看画面中最亮和最暗的差值。高对比光影制造焦点，低对比光影制造氛围。先决定谁是主角,再布光'
+  ],
+  '色彩关系': [
+    '数一下这张图实际用了几个颜色——通常不超过4个。限制调色板,才能让每个颜色有分工',
+    '观察颜色之间的饱和度和明度关系。和谐的秘密不在色相,在饱和度和明度的一致性'
+  ],
+  '材质触感': [
+    '这张图里的表面肌理触手可及。试着用CSS重现这种质感——不是贴图,是用渐变和噪点模拟',
+    '注意材质与光线的互动方式:粗糙表面散射,光滑表面反射。界面里的高级感靠材质,不靠颜色'
+  ],
+  '空间构成': [
+    '分析这张图的景深——前景、中景、背景分别承担什么角色。信息架构的分层和空间分层是同一件事',
+    '找到画面中的呼吸口——那些故意空出来的区域。界面布局中,功能区的边界由留白定义,不由线框'
+  ],
+  '排版节奏': [
+    '观察文字块与图像的大小比例和间距关系。字号不是越大越好,是对比让它大',
+    '注意行宽和栏数。窄栏适合快速扫读,宽栏适合沉浸阅读——选栏宽之前先想好用户在这个区域的阅读模式'
+  ],
+  '几何秩序': [
+    '画面中基本几何体的排列有什么规律——重复、渐变、还是错位。把这个规律提取出来就是一套网格系统',
+    '几何构成不需要颜色来撑场面。形体的位置、大小、旋转角度三者定义了一切'
+  ],
+  '暗调氛围': [
+    '黑暗中什么在发光,什么在隐退。暗色UI设计的第一步不是选背景色,是决定光源',
+    '观察暗部的层次——不是一团黑,有3-4个灰度层级。暗色模式的挑战不在黑,在灰'
+  ],
+  '自然肌理': [
+    '自然界没有纯色。这片叶子/石头/水面的颜色变化是随机但有规律的——用噪点+渐变可以逼近这种效果',
+    '生物生长的模式——分形、螺旋、对称破缺——可以直接翻译成品牌辅助图形的生成规则'
+  ],
+  '留白呼吸': [
+    '注意画面中空白区域和内容区域的面积比。超过1:1的留白比例让内容显得更珍贵',
+    '最大的元素不应该填满空间,应该定义空间的边界。留白不是剩余的,是主动规划的'
+  ],
+  '渐变过渡': [
+    '观察渐变的两个端点颜色和中间路径。不是A到B的直线,是绕了色环的曲线——中间色才是渐变的灵魂',
+    '注意渐变边缘的处理:硬边=分割,软边=融合。同一组颜色,边缘差2px就是两个完全不同的设计语言'
+  ],
+  '对比张力': [
+    '找到画面中最强烈的对比——大vs小、粗vs细、亮vs暗、密vs疏。这个对比就是视觉冲击力的来源',
+    '对比不需要过渡。让两个极端直接碰撞——中间态越多,张力越弱'
+  ],
+  '破坏重构': [
+    '注意画面中不完美的地方——不对称、不规则的边缘、意外的色彩。这些不是瑕疵,是个性',
+    '规则建立秩序,破坏规则建立记忆点。一个打破网格的元素比十个遵守网格的元素更让人记住'
+  ]
+};
+
+window.generateNote = function() {
+  const cat = selectedCategory || DESIGN_CATEGORIES[Math.floor(Math.random() * DESIGN_CATEGORIES.length)];
+  const notes = NOTE_BY_CATEGORY[cat] || NOTE_BY_CATEGORY['留白呼吸'];
+  const note = notes[Math.floor(Math.random() * notes.length)];
+  document.getElementById('previewNote').value = note;
+  if (!selectedCategory) {
+    selectedCategory = cat;
+    renderPreviewCategories();
+  }
+  showToast('灵光一现 ✨');
+};
+
+// ===== 保留 =====
+window.keepItem = function() {
+  const title = selectedCategory || document.getElementById('infoTitle').value || '未分类';
+  const note = document.getElementById('previewNote').value || document.getElementById('infoNote').value || '';
+  const date = new Date().toISOString().slice(0, 10);
+  const id = 'loc-' + Date.now().toString(36);
+
+  // Use working canvas or raw data for video/GIF
+  let type = 'image', src, thumb;
+  if (workingData._dataUrl) {
+    // Video or GIF: use raw data
+    const ft = workingData._fileType || '';
+    type = ft.startsWith('video/') ? 'video' : 'image';
+    src = workingData._dataUrl; thumb = workingData._dataUrl;
+  } else {
+    src = workingData.canvas.toDataURL('image/webp', 0.85);
+    thumb = src;
+  }
+
+  localItems.unshift({
+    id, type, src, thumb,
+    title, tags: [...selectedTags],
+    note: note || undefined, date, source: '本地采集'
+  });
+  persist();
+
+  // update preview image
+  document.getElementById('previewImg').src = dataUrl;
+
+  document.getElementById('previewOverlay').classList.remove('show');
+  document.getElementById('editOverlay').classList.remove('show');
+  renderGallery();
+  showToast('已保存到灵感库');
+};
+
+// ===== 灯箱 =====
+window.openLightbox = function(id) {
+  const all = [...localItems, ...galleryItems];
+  const i = all.find(x => x.id == id);
+  if (!i) return;
+  document.getElementById('lightboxImg').src = i.src;
+  const noteText = i.note || i.desc || '';
+  const noteHtml = `<h3 style="font-size:1rem;font-weight:600;color:#111;margin:0 0 8px;">${i.title}</h3>`
+    + (noteText ? `<p style="margin:0 0 6px;">${noteText}</p>` : '')
+    + `<p style="font-size:0.7rem;color:#aaa;margin:0;">${i.date} · ${i.source||''}</p>`;
+  document.getElementById('lightboxNote').innerHTML = noteHtml;
+  document.getElementById('lightbox').classList.add('open');
+};
+window.closeLightbox = function() { document.getElementById('lightbox').classList.remove('open'); };
+window.closePreview = function() {
+  document.getElementById('previewOverlay').classList.remove('show');
+  document.getElementById('editOverlay').classList.remove('show');
+};
+
+window.deleteItem = function(id) {
+  if (!confirm('确定删除这条灵感？')) return;
+  localItems = localItems.filter(i => i.id !== id);
+  galleryItems = galleryItems.filter(i => i.id !== id);
+  persist();
+  renderGallery();
+  showToast('已删除');
+};
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLightbox(); closePreview(); } });
+
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1800); }
+</script>
+<script src="/shared/nav.js?v=4"></script>
 </body>
 </html>

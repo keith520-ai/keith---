@@ -5,576 +5,184 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>项目经历 · 万朗</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/shared/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 公司卡片 */
+        body { background: #fff; color: #111; font-family: 'Inter', sans-serif; }
+        .co-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
         .co-card {
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
+            flex: 1; min-width: 140px; padding: 20px 24px; border-radius: 16px;
+            background: #fafafa; border: 1px solid #f3f4f6; cursor: pointer;
+            transition: all 0.25s ease; position: relative;
         }
-        .co-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(78, 205, 196, 0.15);
+        .co-card:hover { background: #f5f5f5; border-color: #e5e7eb; transform: translateY(-2px); }
+        .co-card.active { background: #111; border-color: #111; }
+        .co-card.active .co-period, .co-card.active .co-role { color: #9ca3af; }
+        .co-card.active .co-company { color: #fff; }
+        .co-logo { height: 24px; margin-bottom: 8px; filter: grayscale(1); opacity: 0.5; transition: all 0.25s ease; }
+        .co-card:hover .co-logo, .co-card.active .co-logo { filter: grayscale(0); opacity: 1; }
+        .co-logo-placeholder {
+            width: 36px; height: 36px; border-radius: 8px; background: #e5e7eb;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 8px;
+            transition: all 0.25s ease;
         }
-        .co-card.is-active {
-            border-color: #4ECDC4 !important;
-            box-shadow: 0 12px 40px rgba(78, 205, 196, 0.2);
-        }
-        .co-card.is-active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px; left: 50%;
-            transform: translateX(-50%);
-            width: 40px; height: 3px;
-            background: linear-gradient(90deg, #4ECDC4 0%, #44A08D 100%);
-            border-radius: 2px;
-        }
-
-        /* Logo 悬停会呼吸旋转 */
-        .co-logo {
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .co-card:hover .co-logo {
-            transform: rotate(-8deg) scale(1.1);
-        }
-
-        /* 状态点闪烁 */
-        .status-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: #4ECDC4;
-            display: inline-block;
-            box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.6);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.6); }
-            70% { box-shadow: 0 0 0 8px rgba(78, 205, 196, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0); }
-        }
-
-        /* 详情面板 fade+slide */
-        .detail-panel {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease, opacity 0.3s ease, margin 0.3s ease;
-            margin-top: 0;
-        }
-        .detail-panel.show {
-            max-height: 6000px;
-            opacity: 1;
-            margin-top: 24px;
-        }
-
-        /* 项目卡片 */
-        .proj-card {
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .proj-card:hover {
-            border-color: #4ECDC4;
-            transform: translateX(4px);
-        }
-        .proj-card.expanded {
-            border-color: #4ECDC4;
-            background: linear-gradient(135deg, rgba(78, 205, 196, 0.04) 0%, rgba(68, 160, 141, 0.02) 100%);
-        }
-
-        /* STAR 逐段淡入 */
-        .star-section {
-            opacity: 0;
-            transform: translateY(8px);
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-        .proj-card.expanded .star-section {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .proj-card.expanded .star-section:nth-child(1) { transition-delay: 0.05s; }
-        .proj-card.expanded .star-section:nth-child(2) { transition-delay: 0.15s; }
-        .proj-card.expanded .star-section:nth-child(3) { transition-delay: 0.25s; }
-
-        /* 数字亮点跳动 */
-        @keyframes numberPop {
-            0% { transform: scale(0.6); opacity: 0; }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .metric-value {
-            display: inline-block;
-            animation: numberPop 0.6s ease forwards;
-        }
-
-        /* toggle 箭头 */
-        .proj-toggle {
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .proj-card.expanded .proj-toggle {
-            transform: rotate(180deg);
-            color: #4ECDC4;
-        }
-
-        /* hover 时数字彩色发光 */
-        .achievement-num {
-            transition: text-shadow 0.3s ease, transform 0.3s ease;
-        }
-        .achievement-card:hover .achievement-num {
-            text-shadow: 0 0 20px rgba(78, 205, 196, 0.6);
-            transform: scale(1.05);
-        }
-
-        /* STAR 左侧色条 */
-        .star-bar {
-            width: 3px;
-            height: 14px;
-            border-radius: 2px;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        .star-bar-s { background: #4ECDC4; }
-        .star-bar-a { background: #44A08D; }
-        .star-bar-r { background: linear-gradient(180deg, #4ECDC4, #44A08D); }
-
-        /* 时间轴装饰 */
-        .timeline-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: white;
-            border: 2px solid #4ECDC4;
-            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.15);
-        }
-
-        /* 角色徽章 */
-        .role-badge {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 999px;
-            letter-spacing: 0.5px;
-        }
-        .role-lead {
-            background: linear-gradient(135deg, #4ECDC4, #44A08D);
-            color: white;
-        }
-        .role-part {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-        .role-tbd {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        /* 部门信息卡 */
-        .dept-card {
-            background: linear-gradient(135deg, rgba(78, 205, 196, 0.06) 0%, rgba(68, 160, 141, 0.03) 100%);
-            border-left: 3px solid #4ECDC4;
-        }
-
-        /* 彩带闪光 hover */
-        .co-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(78, 205, 196, 0.08), transparent);
-            transition: left 0.6s ease;
-            pointer-events: none;
-        }
-        .co-card:hover::before {
-            left: 100%;
-        }
-
-        /* Result 高亮框 */
-        .result-highlight {
-            background: linear-gradient(135deg, rgba(78, 205, 196, 0.08) 0%, rgba(68, 160, 141, 0.04) 100%);
-            border: 1px solid rgba(78, 205, 196, 0.2);
-        }
+        .co-card.active .co-logo-placeholder { background: #333; color: #fff; }
+        .co-period { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: #9ca3af; margin-bottom: 6px; }
+        .co-company { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 700; color: #111; letter-spacing: -0.02em; line-height: 1.1; }
+        .co-role { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+        .co-detail { margin-top: 24px; background: #fafafa; border: 1px solid #f3f4f6; border-radius: 20px; overflow: hidden; display: none; }
+        .co-detail.show { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .proj-item { padding: 24px 28px; border-bottom: 1px solid #f3f4f6; }
+        .proj-item:last-child { border-bottom: none; }
+        .proj-item h4 { font-size: 15px; font-weight: 700; color: #111; margin-bottom: 6px; }
+        .proj-item p { font-size: 13px; color: #6b7280; line-height: 1.7; }
+        .proj-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #f3f4f6; color: #6b7280; margin: 8px 4px 0 0; letter-spacing: 0.03em; }
+        .proj-metric { display: inline-block; font-size: 12px; font-weight: 600; color: #059669; margin: 8px 12px 0 0; }
+        .edu-card { background: #fafafa; border: 1px solid #f3f4f6; border-radius: 20px; padding: 28px 32px; }
+        .skill-tag { display: inline-block; padding: 8px 18px; border-radius: 999px; border: 1px solid #e5e7eb; font-size: 13px; color: #374151; margin: 0 8px 8px 0; transition: all 0.2s ease; }
+        .skill-tag:hover { border-color: #111; background: #111; color: #fff; }
+        @media (max-width: 640px) { .co-card { min-width: 120px; padding: 16px; } .co-company { font-size: 17px; } }
     </style>
 </head>
-<body class="bg-white">
+<body>
 
-    <section class="min-h-screen w-full px-8 py-20 bg-gradient-to-b from-gray-50 to-white">
-        <div class="max-w-5xl mx-auto card-fade">
-            <a href="/" class="back-link mb-12">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                <span>返回首页</span>
-            </a>
+<section class="min-h-screen w-full px-6 md:px-10 py-20 bg-white">
+<div class="max-w-3xl mx-auto card-fade">
 
-            <div class="mb-12 mt-8">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="page-header-num text-xs text-gray-300">02</span>
-                    <div class="w-8 h-0.5 bg-gradient-to-r from-[#4ECDC4] to-[#44A08D]"></div>
-                </div>
-                <h1 class="text-5xl font-bold text-gray-900 mb-4">项目经历</h1>
-                <p class="text-gray-400 text-lg">Projects — 用STAR法则，让每个项目会说话</p>
+    <div class="mb-16 mt-8">
+        <div class="flex items-center gap-3 mb-4"><span class="text-xs text-gray-300 font-mono">02</span><div class="w-8 h-0.5 bg-gradient-to-r from-[#4ECDC4] to-[#44A08D]"></div></div>
+        <h1 class="text-5xl font-bold text-gray-900 mb-4" style="font-family:'Playfair Display',Georgia,serif;">项目经历</h1>
+        <p class="text-gray-400 text-lg">Work & Projects — 真实履历，用结果说话</p>
+    </div>
+
+    <!-- 工作经历 -->
+    <div class="mb-16">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.25em] mb-8">Work Experience</h3>
+        <!-- 横向公司卡片 -->
+        <div class="co-row" id="coRow">
+            <div class="co-card active" data-id="ctrip">
+                <img src="https://companieslogo.com/img/orig/TCOM-dda3d844.png?t=1720244494" alt="携程" class="co-logo" onerror="this.style.display='none'">
+                <div class="co-period">2026.05 — 至今</div><div class="co-company">携程</div><div class="co-role">直连产品经理（B端）</div>
             </div>
-
-            <!-- 顶部成就概览 -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-                <div class="achievement-card bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl p-5 border border-cyan-100">
-                    <div class="achievement-num text-3xl font-bold text-[#4ECDC4] mb-1">4</div>
-                    <div class="text-xs text-gray-500">合作过的公司</div>
-                </div>
-                <div class="achievement-card bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl p-5 border border-cyan-100">
-                    <div class="achievement-num text-3xl font-bold text-[#44A08D] mb-1" id="statProjects">7</div>
-                    <div class="text-xs text-gray-500">主导/参与项目</div>
-                </div>
-                <div class="achievement-card bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl p-5 border border-cyan-100">
-                    <div class="achievement-num text-3xl font-bold text-[#4ECDC4] mb-1">280%</div>
-                    <div class="text-xs text-gray-500">最高增长指标</div>
-                </div>
-                <div class="achievement-card bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl p-5 border border-cyan-100">
-                    <div class="achievement-num text-3xl font-bold text-[#44A08D] mb-1">
-                        <span class="status-dot mr-1 align-middle"></span>
-                        <span>在职</span>
-                    </div>
-                    <div class="text-xs text-gray-500">当前状态</div>
-                </div>
+            <div class="co-card" data-id="qunar">
+                <img src="https://source.qunarzz.com/common/hf/logo.png" alt="去哪儿" class="co-logo" onerror="this.style.display='none'">
+                <div class="co-period">2026.01 — 2026.06</div><div class="co-company">去哪儿网</div><div class="co-role">业务产品经理（C端）</div>
             </div>
-
-            <!-- 使用引导 -->
-            <div class="mb-8 flex items-center gap-3 text-sm text-gray-400">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>点击公司卡片查看该公司下的项目 · 点击项目查看 STAR 详情</span>
+            <div class="co-card" data-id="msxf">
+                <img src="https://www.msxf.com/img/logo_blue.png" alt="马上金融" class="co-logo" onerror="this.style.display='none'">
+                <div class="co-period">2025.08 — 2026.01</div><div class="co-company">马上金融</div><div class="co-role">供应链产品经理（B端）</div>
             </div>
-
-            <!-- 公司卡片列表 -->
-            <div id="companiesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
-
-            <div id="expandBtnWrap" class="text-center mb-8">
-                <button id="expandBtn" class="text-sm text-gray-500 hover:text-[#4ECDC4] transition-colors">
-                    <span id="expandBtnText">展开更早的经历 ↓</span>
-                </button>
+            <div class="co-card" data-id="huasheng">
+                <img src="/assets/huasheng-logo.jpg" alt="镇江花升教育" class="co-logo" style="height:28px;border-radius:4px;">
+                <div class="co-period">2020.06 — 2021.12</div><div class="co-company">镇江花升教育</div><div class="co-role">创始人</div>
             </div>
-
-            <!-- 公司详情面板 -->
-            <div id="companyDetail" class="detail-panel"></div>
         </div>
-    </section>
+        <!-- 详情面板 -->
+        <div class="co-detail show" id="coDetail"></div>
+    </div>
 
-    <script>
-        // ============ 数据 ============
-        const companiesData = [
-            {
-                id: 'qyer',
-                name: '去哪儿网',
-                position: '产品经理实习',
-                duration: '2023.05 - 2023.09',
-                visible: true,
-                logoIcon: 'fas fa-plane',
-                gradient: 'from-red-400 to-orange-400',
-                dept: {
-                    title: '交易与订单部门',
-                    resp: '负责订单侧和流量侧产品设计，涉及用户旅程优化、营销策略制定等',
-                    up: '营销部、数据部、设计部',
-                    down: '开发部、运营部、客服部'
-                },
-                projects: [
-                    {
-                        name: '行程卡改版',
-                        role: '主导',
-                        situation: '订单详情页行程卡信息密度高，用户查找核心信息耗时长，订单详情页平均停留时间低于行业平均水平20%',
-                        action: '通过用户研究识别高频查询项（出发时间、目的地、确认状态），重新设计卡片布局，采用分层展示：核心信息置顶、二级信息可收纳、三级信息在详情页',
-                        result: '用户查询时间降低38%，订单详情页停留时间提升25%，客服投诉率下降15%',
-                        metrics: [{val: '38%', label: '查询时间↓'}, {val: '25%', label: '停留时间↑'}, {val: '15%', label: '投诉率↓'}]
-                    },
-                    {
-                        name: '优惠提示词优化',
-                        role: '参与',
-                        situation: '用户对可用优惠缺乏感知，订单支付时常出现"不知道有优惠"的反馈，优惠使用率仅60%',
-                        action: '分析订单流程中的关键节点，设计场景化提示：支付页面前置提示、失效倒计时警告、个性化优惠推荐，使用A/B测试验证文案效果',
-                        result: '优惠使用率提升到85%，订单复购率上升12%',
-                        metrics: [{val: '60%→85%', label: '使用率'}, {val: '12%', label: '复购率↑'}]
-                    },
-                    {
-                        name: '好车捡漏功能',
-                        role: '主导',
-                        situation: '用户对低价高质车源的需求强烈但发现难度高，市场上缺少有效的"捡漏"机制',
-                        action: '设计"好车捡漏"功能：基于用户历史浏览、预算范围和偏好，实时推送符合条件的低价优质车源。Push+邮件+App内信息流多渠道触达',
-                        result: '新用户转化率提升18%，老用户复购周期缩短22天，用户留存率上升8%',
-                        metrics: [{val: '18%', label: '转化率↑'}, {val: '-22天', label: '复购周期'}, {val: '8%', label: '留存↑'}]
-                    },
-                    {
-                        name: '病毒营销活动',
-                        role: '主导',
-                        situation: '流量侧需要低成本获取新用户，传统营销ROI遇到瓶颈，社交分享率很低（<5%）',
-                        action: '设计基于分享激励的病毒循环：分享→领券→消费→再分享的闭环链条，配合明星代言内容',
-                        result: '营销活动触及用户数增长280%，新用户拉新成本降低65%，活动期间日新增用户峰值达到平时的6倍',
-                        metrics: [{val: '280%', label: '触达↑'}, {val: '65%', label: '成本↓'}, {val: '6x', label: '日新增峰值'}]
-                    }
-                ]
-            },
-            {
-                id: 'ctrip',
-                name: '携程',
-                position: '产品经理',
-                duration: '待补充',
-                visible: true,
-                logoIcon: 'fas fa-hotel',
-                gradient: 'from-cyan-400 to-teal-500',
-                dept: {
-                    title: '度假产品部门',
-                    resp: '负责度假产品的整体规划和优化',
-                    up: '市场部、商家管理部',
-                    down: '技术部、运营部'
-                },
-                projects: [
-                    { name: '项目待补充', role: '待定', situation: '——', action: '——', result: '——', metrics: [] }
-                ]
-            },
-            {
-                id: 'mashangsm',
-                name: '马上消费金融',
-                position: '产品经理',
-                duration: '待补充',
-                visible: true,
-                logoIcon: 'fas fa-credit-card',
-                gradient: 'from-orange-400 to-yellow-400',
-                dept: {
-                    title: '金融科技部门',
-                    resp: '负责消费金融产品设计',
-                    up: '风控部、市场部',
-                    down: '技术部、运营部'
-                },
-                projects: [
-                    { name: '项目待补充', role: '待定', situation: '——', action: '——', result: '——', metrics: [] }
-                ]
-            },
-            {
-                id: 'zhenjiang',
-                name: '镇江花升教育',
-                position: '创始人',
-                duration: '2020.06 - 2021.12',
-                visible: false,
-                logoIcon: 'fas fa-graduation-cap',
-                gradient: 'from-pink-400 to-fuchsia-400',
-                dept: {
-                    title: '教育运营',
-                    resp: '教育产品设计与运营',
-                    up: '教师团队、家长反馈',
-                    down: '技术开发、市场推广'
-                },
-                projects: [
-                    {
-                        name: '在线教学平台搭建',
-                        role: '主导',
-                        situation: '疫情期间线下教育受阻，需要快速搭建线上教学平台以保持业务连续性',
-                        action: '采用低代码方案快速迭代，设计了实时互动课堂、作业批改、学情反馈等核心功能',
-                        result: '2周内完成平台搭建，第一个月在线教学覆盖学生500+，家长满意度达到88%',
-                        metrics: [{val: '2周', label: '交付'}, {val: '500+', label: '首月学生'}, {val: '88%', label: '满意度'}]
-                    }
-                ]
-            }
-        ];
+    <!-- 项目经历 -->
+    <div class="mb-16">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.25em] mb-8">Project</h3>
+        <div class="bg-[#fafafa] border border-[#f3f4f6] rounded-2xl p-8">
+            <div class="text-xs text-gray-300 font-mono mb-2">2025.04 — 2025.09</div>
+            <h4 class="text-lg font-bold text-gray-900 mb-3">重庆市财政局 · 以旧换新政策绩效评价咨询项目</h4>
+            <p class="text-sm text-gray-500 leading-relaxed mb-4">主导政策产品全周期用户研究与体验升级，基于20万份用户问卷数据以及深度访谈，完成数据清洗、分层拆解与行为归因，搭建多维度用户体验分析模型。深度挖掘用户决策壁垒、补贴申领流程卡点，输出8个方面产品体验优化策略。方案被财政局采纳并落地产品迭代。</p>
+            <span class="proj-tag">用户研究</span><span class="proj-tag">数据分析</span><span class="proj-tag">政策咨询</span><span class="proj-tag">20万问卷</span>
+            <br><span class="proj-metric">用户满意度提升至 95%</span>
+        </div>
+    </div>
 
-        // ============ 状态 ============
-        let activeCompanyId = null;
-        let expandedProjectKey = null;
+    <!-- 教育 -->
+    <div class="mb-16">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.25em] mb-8">Education</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="edu-card"><div class="text-xs text-gray-300 font-mono mb-2">2024.09 — 2027.06</div><h4 class="text-lg font-bold text-gray-900 mb-1">重庆大学<span class="text-xs text-gray-400 font-normal ml-2">985</span></h4><p class="text-sm text-gray-500">金融专硕（硕士）</p><p class="text-xs text-gray-300 mt-2">专业排名 3/30</p></div>
+            <div class="edu-card"><div class="text-xs text-gray-300 font-mono mb-2">2020.09 — 2024.06</div><h4 class="text-lg font-bold text-gray-900 mb-1">扬州大学</h4><p class="text-sm text-gray-500">金融学（本科）</p><p class="text-xs text-gray-300 mt-2">专业排名 10/50</p></div>
+        </div>
+    </div>
 
-        // ============ 渲染公司列表 ============
-        function renderCompanies() {
-            const grid = document.getElementById('companiesGrid');
-            const visible = companiesData.filter(c => c.visible);
+    <!-- 技能 & 荣誉 -->
+    <div>
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-[0.25em] mb-8">Skills & Honors</h3>
+        <div class="mb-6"><p class="text-xs text-gray-400 mb-3 uppercase tracking-wider">技能</p><div><span class="skill-tag">SQL</span><span class="skill-tag">STATA</span><span class="skill-tag">Axure</span><span class="skill-tag">Excel</span><span class="skill-tag">CET-6</span><span class="skill-tag">AI工具（可画/剪映）</span></div></div>
+        <div class="mb-6"><p class="text-xs text-gray-400 mb-3 uppercase tracking-wider">荣誉</p><div><span class="skill-tag">🏆 美国大学生数学建模大赛 H奖</span><span class="skill-tag">🏆 全国大学生创青春 国奖</span><span class="skill-tag">🏆 江苏省高等数学竞赛 一等奖</span></div></div>
+        <div>
+            <p class="text-xs text-gray-400 mb-3 uppercase tracking-wider">校园 & 其他</p>
+            <div class="bg-[#fafafa] border border-[#f3f4f6] rounded-2xl p-6 mb-4">
+                <h4 class="text-base font-bold text-gray-900 mb-2">校学生社团联合会 · 执行主席</h4>
+                <p class="text-xs text-gray-400 mb-3">主要负责外联方向</p>
+                <p class="text-sm text-gray-500 leading-relaxed">担任校社联主席期间，主导外联商务谈判，累计达成10w+校园赞助合作。统筹落地多场覆盖10w+人次的大型校园活动，具备商务谈判与大型项目统筹能力。主导话剧《活着》斩获省级奖项。</p>
+                <div class="flex flex-wrap gap-2 mt-3"><span class="proj-tag">外联谈判</span><span class="proj-tag">大型活动统筹</span><span class="proj-tag">10w+赞助</span><span class="proj-tag">10w+人次</span></div>
+            </div>
+            <p class="text-sm text-gray-500 leading-relaxed">六年学生干部经历 · 新媒体运营与校园大使多元实践 · 擅长挖掘用户需求、输出解决方案并推动落地</p>
+        </div>
+    </div>
 
-            grid.innerHTML = visible.map(c => `
-                <div class="co-card bg-white rounded-2xl p-6 border border-gray-100 ${activeCompanyId === c.id ? 'is-active' : ''}"
-                     data-id="${c.id}">
-                    <div class="flex items-start gap-4">
-                        <div class="co-logo w-14 h-14 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center flex-shrink-0 shadow-md">
-                            <i class="${c.logoIcon} text-white text-xl"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-lg font-bold text-gray-900 mb-1">${c.name}</h3>
-                            <p class="text-sm text-gray-500 mb-1">${c.position}</p>
-                            <div class="flex items-center gap-2 text-xs text-gray-400">
-                                <div class="timeline-dot flex-shrink-0" style="width:6px;height:6px;border-width:1.5px;box-shadow:0 0 0 2px rgba(78,205,196,0.15);"></div>
-                                <span>${c.duration}</span>
-                                <span class="ml-auto text-[#4ECDC4] font-medium">${c.projects.length} 个项目</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+</div>
+</section>
 
-            // 事件绑定
-            grid.querySelectorAll('.co-card').forEach(card => {
-                card.addEventListener('click', () => selectCompany(card.dataset.id));
-            });
-        }
+<script>
+var projects = {
+    ctrip: {
+        period: '2026.05 — 至今 · 上海', company: '携程', role: '直连产品经理（B端）· 租车事业部',
+        items: [
+            { title: '直连能力矩阵建设', desc: '主导直连域全链路能力与VBK（自研供应商平台）对齐，覆盖续租、原单修改、提前还车、车损审核四大能力。通过新增接口与复用基础能力结合，统一API开关校验及关键参数透传逻辑，落地后四大场景全闭环，消除商家多端切换痛点，前置扫清供应商向API迁移的核心阻塞点。', tags: ['B端产品','API设计','供应商平台'], metrics: ['四大场景全闭环'] },
+            { title: '车型Mapping全链路优化', desc: '在直连加工层前置统一过滤规则、落地增量同步机制，从源头减少匹配数据。下游商品匹配层搭建「AI匹配-人工兜底-异常回流」完整流程，新增原始车型查询接口提升匹配精度，同步重构上货率指标。', tags: ['AI匹配','数据优化','指标重构'], metrics: ['上货率 80% → 94%'] }
+        ]
+    },
+    qunar: {
+        period: '2026.01 — 2026.06 · 北京', company: '去哪儿网', role: '业务产品经理（C端）· 租车业务部',
+        items: [
+            { title: '首页改版项目', desc: '针对首页承接薄弱、交叉用户操作链路繁琐问题，一期落地行程卡功能、精简操作路径，提升首页流量承接能力5%、拉动核心指标提升0.5pt。二期迭代优化UI视觉瑕疵，补齐特殊case与异常状态兜底逻辑，完善全场景用户体验。', tags: ['C端产品','用户体验','AB测试'], metrics: ['流量承接 +5%','核心指标 +0.5pt'] },
+            { title: '病毒营销项目', desc: '针对去哪儿交叉用户50%不清楚有租车业务这一痛点，梳理现有触达渠道（APP Push、短信等）进行差异化触达策略，在五月流量高峰实现跨越式增长。', tags: ['增长策略','用户触达','Push'], metrics: ['QC 超 50%'] }
+        ]
+    },
+    msxf: {
+        period: '2025.08 — 2026.01 · 重庆', company: '马上消费金融股份有限公司', role: '供应链产品经理（B端）· 金融科技部',
+        items: [
+            { title: '一体化外包招聘协同系统', desc: '复盘外包招聘全业务链路，识别流程中多层人工中转、信息同步滞后、简历资源浪费核心卡点。搭建一体化外包招聘协同系统，实现岗位发布、简历流转、面试反馈、外包资质核验全链路线上自动化。新增待入职人数字段，有效降低简历无效消耗，压缩跨角色沟通成本。', tags: ['B端产品','流程优化','自动化'], metrics: ['招聘流程效率提升 50%+'] },
+            { title: 'AI智能问答RAG助手', desc: '针对人力外包供应商的高频咨询痛点，主导从0到1搭建智能问答RAG助手。上线后用户咨询响应时效从平均2小时缩短至10秒，人工客服处理量降低60%。', tags: ['AI应用','RAG','0→1'], metrics: ['响应 2h → 10s','客服量 -60%'] }
+        ]
+    },
+    huasheng: {
+        period: '2020.06 — 2021.12 · 镇江', company: '镇江花升教育股份有限公司', role: '创始人 · 教育科技',
+        items: [
+            { title: '在线教学平台搭建', desc: '疫情期间线下教育受阻，快速搭建线上教学平台保持业务连续性。采用低代码方案快速迭代，设计实时互动课堂、作业批改、学情反馈等核心功能。2周内完成平台搭建，第一个月在线教学覆盖学生500+，家长满意度达到88%。', tags: ['创业','0→1','在线教育'], metrics: ['首月覆盖 500+ 学生','满意度 88%'] },
+            { title: '教育产品运营', desc: '负责名师资源拓展与课程体系设计，建立教师-学生-家长三方反馈闭环。通过社群运营+转介绍机制实现用户增长，累计服务学生超1000人。', tags: ['运营','用户增长','社群'], metrics: ['累计服务 1000+ 学生'] }
+        ]
+    }
+};
 
-        // ============ 选择公司 ============
-        function selectCompany(id) {
-            if (activeCompanyId === id) {
-                activeCompanyId = null;
-                expandedProjectKey = null;
-            } else {
-                activeCompanyId = id;
-                expandedProjectKey = null;
-            }
-            renderCompanies();
-            renderDetail();
-            // 平滑滚动到详情
-            if (activeCompanyId) {
-                setTimeout(() => {
-                    document.getElementById('companyDetail')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 300);
-            }
-        }
+function showDetail(id) {
+    var d = projects[id];
+    var html = '<div style="padding:24px 28px;border-bottom:1px solid #f3f4f6;">';
+    html += '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.2em;color:#9ca3af;margin-bottom:4px;">' + d.period + '</div>';
+    html += '<div style="font-family:\'Playfair Display\',Georgia,serif;font-size:24px;font-weight:700;color:#111;">' + d.company + '</div>';
+    html += '<div style="font-size:13px;color:#6b7280;margin-top:2px;">' + d.role + '</div></div>';
+    d.items.forEach(function(p) {
+        html += '<div class="proj-item"><h4>' + p.title + '</h4><p>' + p.desc + '</p>';
+        p.tags.forEach(function(t) { html += '<span class="proj-tag">' + t + '</span>'; });
+        html += '<br>';
+        p.metrics.forEach(function(m) { html += '<span class="proj-metric">' + m + '</span>'; });
+        html += '</div>';
+    });
+    document.getElementById('coDetail').innerHTML = html;
+    document.getElementById('coDetail').classList.add('show');
+}
 
-        // ============ 渲染公司详情 ============
-        function renderDetail() {
-            const panel = document.getElementById('companyDetail');
-            if (!activeCompanyId) {
-                panel.classList.remove('show');
-                setTimeout(() => { if (!activeCompanyId) panel.innerHTML = ''; }, 400);
-                return;
-            }
-            const c = companiesData.find(x => x.id === activeCompanyId);
-
-            panel.innerHTML = `
-                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-                    <!-- 部门信息 -->
-                    <div class="dept-card p-6">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${c.gradient} flex items-center justify-center">
-                                <i class="${c.logoIcon} text-white"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-base font-bold text-gray-900">${c.name} · ${c.dept.title}</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">${c.position} · ${c.duration}</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-4">${c.dept.resp}</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                            <div class="bg-white/60 rounded-lg p-3">
-                                <span class="text-gray-400">↑ 上游协作</span>
-                                <div class="text-gray-700 mt-1">${c.dept.up}</div>
-                            </div>
-                            <div class="bg-white/60 rounded-lg p-3">
-                                <span class="text-gray-400">↓ 下游协作</span>
-                                <div class="text-gray-700 mt-1">${c.dept.down}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 项目列表 -->
-                    <div class="p-6">
-                        <h4 class="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-4">代表项目 · ${c.projects.length}</h4>
-                        <div class="space-y-3">
-                            ${c.projects.map((p, i) => renderProject(c.id, i, p)).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            panel.classList.add('show');
-            bindProjectEvents();
-        }
-
-        // ============ 渲染项目卡片 ============
-        function renderProject(coId, idx, p) {
-            const key = `${coId}-${idx}`;
-            const expanded = expandedProjectKey === key;
-            const roleClass = p.role === '主导' ? 'role-lead' : p.role === '参与' ? 'role-part' : 'role-tbd';
-
-            return `
-                <div class="proj-card bg-white rounded-xl border border-gray-100 p-5 ${expanded ? 'expanded' : ''}" data-key="${key}">
-                    <div class="flex items-center justify-between gap-3 proj-header cursor-pointer">
-                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <div class="text-xs text-gray-300 font-mono">${String(idx + 1).padStart(2, '0')}</div>
-                            <h5 class="text-base font-semibold text-gray-900 truncate">${p.name}</h5>
-                            <span class="role-badge ${roleClass}">${p.role}</span>
-                        </div>
-                        <svg class="proj-toggle w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
-
-                    ${expanded ? `
-                    <div class="proj-body mt-5 pt-5 border-t border-gray-100 space-y-5">
-                        <div class="star-section">
-                            <div class="flex items-center mb-2">
-                                <span class="star-bar star-bar-s"></span>
-                                <span class="text-[11px] font-bold text-[#4ECDC4] uppercase tracking-widest">Situation · 情景</span>
-                            </div>
-                            <p class="text-sm text-gray-600 leading-relaxed pl-3">${p.situation}</p>
-                        </div>
-                        <div class="star-section">
-                            <div class="flex items-center mb-2">
-                                <span class="star-bar star-bar-a"></span>
-                                <span class="text-[11px] font-bold text-[#44A08D] uppercase tracking-widest">Action · 行动</span>
-                            </div>
-                            <p class="text-sm text-gray-600 leading-relaxed pl-3">${p.action}</p>
-                        </div>
-                        <div class="star-section">
-                            <div class="flex items-center mb-2">
-                                <span class="star-bar star-bar-r"></span>
-                                <span class="text-[11px] font-bold text-gray-700 uppercase tracking-widest">Result · 结果</span>
-                            </div>
-                            <p class="text-sm text-gray-700 leading-relaxed pl-3 mb-3">${p.result}</p>
-                            ${p.metrics && p.metrics.length ? `
-                            <div class="result-highlight rounded-xl p-4 ml-3">
-                                <div class="grid grid-cols-${Math.min(p.metrics.length, 3)} gap-4">
-                                    ${p.metrics.map((m, i) => `
-                                        <div class="text-center">
-                                            <div class="metric-value text-2xl font-bold text-[#44A08D]" style="animation-delay:${0.3 + i*0.1}s">${m.val}</div>
-                                            <div class="text-[11px] text-gray-500 mt-1">${m.label}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-
-        // ============ 绑定项目事件 ============
-        function bindProjectEvents() {
-            document.querySelectorAll('.proj-card').forEach(card => {
-                const header = card.querySelector('.proj-header');
-                header?.addEventListener('click', () => {
-                    const key = card.dataset.key;
-                    expandedProjectKey = expandedProjectKey === key ? null : key;
-                    renderDetail();
-                });
-            });
-        }
-
-        // ============ 展开/收起早期公司 ============
-        document.getElementById('expandBtn').addEventListener('click', () => {
-            const hasHidden = companiesData.some(c => !c.visible);
-            const btnText = document.getElementById('expandBtnText');
-            if (hasHidden) {
-                companiesData.forEach(c => c.visible = true);
-                btnText.textContent = '收起早期经历 ↑';
-                document.getElementById('statProjects').textContent =
-                    companiesData.reduce((sum, c) => sum + c.projects.length, 0);
-            } else {
-                companiesData.forEach(c => {
-                    if (c.id === 'zhenjiang') c.visible = false;
-                });
-                btnText.textContent = '展开更早的经历 ↓';
-                if (activeCompanyId === 'zhenjiang') {
-                    activeCompanyId = null;
-                    renderDetail();
-                }
-                document.getElementById('statProjects').textContent =
-                    companiesData.filter(c => c.visible).reduce((sum, c) => sum + c.projects.length, 0);
-            }
-            renderCompanies();
-        });
-
-        // ============ 初始 ============
-        renderCompanies();
-    </script>
-    <script src="/shared/nav.js"></script>
+// Init
+showDetail('ctrip');
+document.querySelectorAll('.co-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+        document.querySelectorAll('.co-card.active').forEach(function(c) { c.classList.remove('active'); });
+        this.classList.add('active');
+        showDetail(this.dataset.id);
+    });
+});
+</script>
+<script src="/shared/nav.js?v=4"></script>
 </body>
 </html>

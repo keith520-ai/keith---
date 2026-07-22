@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵感素材预处理 · 万朗</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #fff; color: #333; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; }
+  .btn {
+    padding: 8px 20px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff;
+    font-size: 0.82rem; color: #333; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: #111; }
+  .btn-primary { background: #111; color: #fff; border-color: #111; }
+  .btn-primary:hover { background: #333; }
+  .btn-danger { border-color: #e5e5e5; color: #c00; }
+  .btn-danger:hover { border-color: #c00; background: #fee; }
+  .btn-sm { padding: 5px 12px; font-size: 0.72rem; }
+  .btn.active { background: #111; color: #fff; border-color: #111; }
+  .drop-zone {
+    border: 2px dashed #d1d5db; border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; min-height: 200px; cursor: pointer; transition: border-color 0.2s;
+  }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: #111; background: #fafafa; }
+  .tag-chip {
+    display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+    border: 1px solid #e5e5e5; border-radius: 3px; font-size: 0.75rem; color: #555; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tag-chip:hover, .tag-chip.selected { border-color: #111; background: #111; color: #fff; }
+  .canvas-wrap { position: relative; display: inline-block; max-width: 100%; }
+  .canvas-wrap canvas { max-width: 100%; height: auto; display: block; border-radius: 4px; }
+  .crop-overlay { position: absolute; border: 2px dashed #111; pointer-events: auto; cursor: move; z-index: 10; }
+  .crop-handle {
+    position: absolute; width: 10px; height: 10px; background: #fff; border: 2px solid #111;
+    border-radius: 50%; z-index: 11;
+  }
+  .crop-handle.tl { top: -5px; left: -5px; cursor: nw-resize; }
+  .crop-handle.tr { top: -5px; right: -5px; cursor: ne-resize; }
+  .crop-handle.bl { bottom: -5px; left: -5px; cursor: sw-resize; }
+  .crop-handle.br { bottom: -5px; right: -5px; cursor: se-resize; }
+  .slider-input { width: 100%; accent-color: #111; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999;
+    background: #111; color: #fff; padding: 10px 24px; border-radius: 4px; font-size: 0.82rem;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 768px) {
+    .preview-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<section class="min-h-screen px-4 md:px-8 py-16 bg-white">
+<div class="max-w-6xl mx-auto">
+
+  <!-- 返回 -->
+  <a href="/inspiration/" style="color:#999;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color .2s;" onmouseenter="this.style.color='#333'" onmouseleave="this.style.color='#999'">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7 7-7M3 12h18"/></svg>
+    <span>返回灵感采集</span>
+  </a>
+
+  <!-- 标题 -->
+  <div class="mt-6 mb-10">
+    <h1 class="text-[2rem] font-bold text-[#111] mb-2">灵感素材预处理</h1>
+    <p class="text-sm text-[#999]">截图 → 自动清理边距 → 裁剪 → 擦除 → 导出</p>
+  </div>
+
+  <!-- Step 1: 上传 -->
+  <div class="panel p-6 mb-6" id="uploadPanel">
+    <h2 class="text-sm font-semibold text-[#111] mb-4">1. 上传截图</h2>
+    <div class="drop-zone" id="dropZone">
+      <div class="text-center text-[#999]">
+        <div class="text-2xl mb-2">📁</div>
+        <p class="text-sm">拖拽图片到此处，或点击选择文件</p>
+        <p class="text-xs mt-1">支持 PNG / JPG / WebP</p>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" class="hidden">
+  </div>
+
+  <!-- Step 2: 处理区 (上传后显示) -->
+  <div id="workspace" class="hidden space-y-6">
+
+    <!-- 工具栏 -->
+    <div class="panel p-4 flex flex-wrap gap-2 items-center">
+      <span class="text-xs text-[#999] mr-2 font-semibold">处理模式：</span>
+      <button class="btn btn-sm active" data-mode="clean" onclick="setMode('clean')">自动清理</button>
+      <button class="btn btn-sm" data-mode="crop" onclick="setMode('crop')">裁剪</button>
+      <button class="btn btn-sm" data-mode="erase" onclick="setMode('erase')">擦除</button>
+      <span class="mx-2 text-[#ddd]">|</span>
+      <span class="text-xs text-[#999] mr-1">擦除方式：</span>
+      <button class="btn btn-sm" data-erase="cut" onclick="setEraseMode('cut')">裁切</button>
+      <button class="btn btn-sm" data-erase="fill" onclick="setEraseMode('fill')">纯色填充</button>
+      <button class="btn btn-sm active" data-erase="blur" onclick="setEraseMode('blur')">模糊</button>
+      <span class="mx-2 text-[#ddd]">|</span>
+      <span class="text-xs text-[#999] mr-1">画笔大小：</span>
+      <input type="range" class="slider-input" style="width:100px" min="5" max="80" value="25" id="brushSize" oninput="updateBrushSize()">
+      <span class="text-xs text-[#999] ml-1" id="brushSizeLabel">25px</span>
+      <span class="mx-2 text-[#ddd]">|</span>
+      <button class="btn btn-sm" onclick="undoErase()">↩ 撤销</button>
+      <button class="btn btn-sm btn-danger" onclick="resetAll()">重置全部</button>
+    </div>
+
+    <!-- 预览对比 -->
+    <div class="grid gap-6 preview-grid" style="grid-template-columns:1fr 1fr;">
+      <div>
+        <p class="text-xs text-[#999] mb-2 font-semibold">原图 / 处理区</p>
+        <div class="canvas-wrap panel p-2" id="originalWrap">
+          <canvas id="originalCanvas"></canvas>
+          <div class="crop-overlay hidden" id="cropBox">
+            <div class="crop-handle tl" data-dir="tl"></div>
+            <div class="crop-handle tr" data-dir="tr"></div>
+            <div class="crop-handle bl" data-dir="bl"></div>
+            <div class="crop-handle br" data-dir="br"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs text-[#999] mb-2 font-semibold">处理后预览</p>
+        <div class="canvas-wrap panel p-2">
+          <canvas id="previewCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 裁剪确认 -->
+    <div class="flex gap-2" id="cropActions" style="display:none;">
+      <button class="btn btn-primary btn-sm" onclick="applyCrop()">应用裁剪</button>
+      <button class="btn btn-sm" onclick="cancelCrop()">取消</button>
+    </div>
+
+    <!-- Step 3: 素材信息 -->
+    <div class="panel p-6">
+      <h2 class="text-sm font-semibold text-[#111] mb-4">素材信息</h2>
+      <div class="grid gap-4" style="grid-template-columns:1fr 1fr;">
+        <div>
+          <label class="text-xs text-[#999] block mb-1">标题</label>
+          <input type="text" id="titleInput" class="w-full px-3 py-2 border border-[#e5e5e5] rounded text-sm focus:outline-none focus:border-[#111]" placeholder="给素材起个名字">
+        </div>
+        <div>
+          <label class="text-xs text-[#999] block mb-1">来源</label>
+          <input type="text" id="sourceInput" class="w-full px-3 py-2 border border-[#e5e5e5] rounded text-sm focus:outline-none focus:border-[#111]" placeholder="Dribbble / Twitter / 自摄...">
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="text-xs text-[#999] block mb-2">标签（点击选择）</label>
+        <div class="flex flex-wrap gap-2" id="tagsCloud"></div>
+        <div class="flex gap-2 mt-2">
+          <input type="text" id="customTagInput" class="px-3 py-1.5 border border-[#e5e5e5] rounded text-xs w-32 focus:outline-none focus:border-[#111]" placeholder="自定义标签">
+          <button class="btn btn-sm" onclick="addCustomTag()">+ 添加</button>
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="text-xs text-[#999] block mb-1">个人感悟</label>
+        <textarea id="noteInput" class="w-full px-3 py-2 border border-[#e5e5e5] rounded text-sm focus:outline-none focus:border-[#111]" rows="2" placeholder="关于这条灵感的思考..."></textarea>
+      </div>
+    </div>
+
+    <!-- Step 4: 导出 -->
+    <div class="panel p-6">
+      <h2 class="text-sm font-semibold text-[#111] mb-4">导出</h2>
+      <div class="flex flex-wrap gap-3 items-center">
+        <button class="btn btn-primary" onclick="downloadImage()">📥 下载 WebP</button>
+        <button class="btn" onclick="copyJSON()">📋 复制 JSON 片段</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</section>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 状态 =====
+let originalImage = null;
+let workingCanvas = null, workingCtx = null;
+let previewCanvas = null, previewCtx = null;
+let mode = 'clean', eraseMode = 'blur';
+let cropRect = { x: 0, y: 0, w: 0, h: 0 };
+let isDragging = false, isResizing = false, resizeDir = null;
+let dragStart = { x: 0, y: 0 }, cropStart = { x: 0, y: 0, w: 0, h: 0 };
+let eraseMask = null, eraseMaskCtx = null;
+let eraseHistory = [];
+let brushSize = 25;
+let isErasing = false;
+let selectedTags = [];
+const presetTags = ['UI设计', '3D', '网页', '建筑', '摄影', '产品', '动效', '空间', '交互设计', '数据可视化'];
+
+// ===== 上传 =====
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      originalImage = img;
+      initWorkspace();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== 初始化工作区 =====
+function initWorkspace() {
+  document.getElementById('workspace').classList.remove('hidden');
+  document.getElementById('uploadPanel').classList.add('hidden');
+
+  const oc = document.getElementById('originalCanvas');
+  const pw = document.getElementById('previewCanvas');
+
+  const maxW = Math.min(originalImage.width, 800);
+  const scale = maxW / originalImage.width;
+  const h = originalImage.height * scale;
+
+  oc.width = maxW; oc.height = h;
+  pw.width = maxW; pw.height = h;
+
+  const octx = oc.getContext('2d');
+  octx.drawImage(originalImage, 0, 0, maxW, h);
+
+  workingCanvas = document.createElement('canvas');
+  workingCanvas.width = maxW; workingCanvas.height = h;
+  workingCtx = workingCanvas.getContext('2d');
+  workingCtx.drawImage(originalImage, 0, 0, maxW, h);
+
+  previewCanvas = pw;
+  previewCtx = pw.getContext('2d');
+
+  // 擦除遮罩
+  eraseMask = document.createElement('canvas');
+  eraseMask.width = maxW; eraseMask.height = h;
+  eraseMaskCtx = eraseMask.getContext('2d');
+  eraseHistory = [];
+
+  // 自动边缘清理
+  autoClean();
+
+  updatePreview();
+  renderTags();
+}
+
+// ===== 自动边缘清理 =====
+function autoClean() {
+  const w = workingCanvas.width, h = workingCanvas.height;
+  const data = workingCtx.getImageData(0, 0, w, h).data;
+
+  function pixelAt(x, y) {
+    const i = (y * w + x) * 4;
+    return { r: data[i], g: data[i+1], b: data[i+2] };
+  }
+  function isUniform(p) {
+    return Math.abs(p.r - p.g) < 20 && Math.abs(p.g - p.b) < 20 && Math.abs(p.r - p.b) < 20;
+  }
+  function isNearBlack(p) { return p.r < 35 && p.g < 35 && p.b < 35; }
+  function isNearWhite(p) { return p.r > 220 && p.g > 220 && p.b > 220; }
+
+  // Scan from each edge: find first row/col where >60% of pixels are NOT uniform edge colors
+  let top = 0, bottom = h - 1, left = 0, right = w - 1;
+
+  for (let y = 0; y < h * 0.4; y++) {
+    let contentPx = 0, total = 0;
+    for (let x = 0; x < w; x += 6) {
+      const p = pixelAt(x, y);
+      if (isUniform(p) && (isNearBlack(p) || isNearWhite(p))) {} else { contentPx++; }
+      total++;
+    }
+    if (contentPx / total > 0.4) { top = Math.max(0, y - 4); break; }
+  }
+
+  for (let y = h - 1; y > h * 0.6; y--) {
+    let contentPx = 0, total = 0;
+    for (let x = 0; x < w; x += 6) {
+      const p = pixelAt(x, y);
+      if (isUniform(p) && (isNearBlack(p) || isNearWhite(p))) {} else { contentPx++; }
+      total++;
+    }
+    if (contentPx / total > 0.4) { bottom = Math.min(h - 1, y + 4); break; }
+  }
+
+  for (let x = 0; x < w * 0.4; x++) {
+    let contentPx = 0, total = 0;
+    for (let y = 0; y < h; y += 6) {
+      const p = pixelAt(x, y);
+      if (isUniform(p) && (isNearBlack(p) || isNearWhite(p))) {} else { contentPx++; }
+      total++;
+    }
+    if (contentPx / total > 0.4) { left = Math.max(0, x - 4); break; }
+  }
+
+  for (let x = w - 1; x > w * 0.6; x--) {
+    let contentPx = 0, total = 0;
+    for (let y = 0; y < h; y += 6) {
+      const p = pixelAt(x, y);
+      if (isUniform(p) && (isNearBlack(p) || isNearWhite(p))) {} else { contentPx++; }
+      total++;
+    }
+    if (contentPx / total > 0.4) { right = Math.min(w - 1, x + 4); break; }
+  }
+
+  const cx = left, cy = top, cw = right - left, ch = bottom - top;
+
+  if (cw > 40 && ch > 40 && (cx > 4 || cy > 4 || cw < w - 8 || ch < h - 8)) {
+    const cropped = workingCtx.getImageData(cx, cy, cw, ch);
+    workingCanvas.width = cw; workingCanvas.height = ch;
+    workingCtx.putImageData(cropped, 0, 0);
+
+    document.getElementById('originalCanvas').width = cw;
+    document.getElementById('originalCanvas').height = ch;
+    document.getElementById('originalCanvas').getContext('2d').putImageData(cropped, 0, 0);
+
+    previewCanvas.width = cw; previewCanvas.height = ch;
+    eraseMask.width = cw; eraseMask.height = ch;
+    eraseMaskCtx = eraseMask.getContext('2d');
+    eraseHistory = [];
+
+    showToast('已自动清理边缘');
+  }
+}
+
+// ===== 模式切换 =====
+window.setMode = function(m) {
+  mode = m;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  document.getElementById('cropBox').classList.toggle('hidden', m !== 'crop');
+  document.getElementById('cropActions').style.display = m === 'crop' ? 'flex' : 'none';
+
+  if (m === 'crop') initCrop();
+  if (m === 'erase') initErase();
+};
+
+window.setEraseMode = function(m) {
+  eraseMode = m;
+  document.querySelectorAll('[data-erase]').forEach(b => b.classList.toggle('active', b.dataset.erase === m));
+};
+
+// ===== 裁剪 =====
+function initCrop() {
+  const w = workingCanvas.width, h = workingCanvas.height;
+  const margin = Math.min(w, h) * 0.08;
+  cropRect = { x: margin, y: margin, w: w - margin * 2, h: h - margin * 2 };
+  updateCropBox();
+}
+
+function updateCropBox() {
+  const box = document.getElementById('cropBox');
+  box.style.left = cropRect.x + 'px'; box.style.top = cropRect.y + 'px';
+  box.style.width = cropRect.w + 'px'; box.style.height = cropRect.h + 'px';
+  box.classList.remove('hidden');
+}
+
+// Crop drag/resize
+document.getElementById('cropBox').addEventListener('mousedown', e => {
+  if (e.target.classList.contains('crop-handle')) {
+    isResizing = true;
+    resizeDir = e.target.dataset.dir;
+  } else {
+    isDragging = true;
+  }
+  dragStart = { x: e.clientX, y: e.clientY };
+  cropStart = { ...cropRect };
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isDragging && !isResizing) return;
+  const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+  if (isDragging) {
+    cropRect.x = Math.max(0, cropStart.x + dx);
+    cropRect.y = Math.max(0, cropStart.y + dy);
+  } else if (isResizing) {
+    const w = workingCanvas.width, h = workingCanvas.height;
+    if (resizeDir.includes('r')) cropRect.w = Math.max(20, Math.min(w - cropRect.x, cropStart.w + dx));
+    if (resizeDir.includes('l')) { cropRect.x = Math.max(0, cropStart.x + dx); cropRect.w = cropStart.w - dx; }
+    if (resizeDir.includes('b')) cropRect.h = Math.max(20, Math.min(h - cropRect.y, cropStart.h + dy));
+    if (resizeDir.includes('t')) { cropRect.y = Math.max(0, cropStart.y + dy); cropRect.h = cropStart.h - dy; }
+  }
+  updateCropBox();
+});
+
+document.addEventListener('mouseup', () => { isDragging = false; isResizing = false; });
+
+window.applyCrop = function() {
+  const { x, y, w, h } = cropRect;
+  const cropped = workingCtx.getImageData(x, y, w, h);
+  resizeAllCanvases(w, h);
+  workingCtx.putImageData(cropped, 0, 0);
+  document.getElementById('originalCanvas').getContext('2d').putImageData(cropped, 0, 0);
+  document.getElementById('cropBox').classList.add('hidden');
+  document.getElementById('cropActions').style.display = 'none';
+  mode = 'clean';
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === 'clean'));
+  updatePreview();
+  showToast('裁剪已应用');
+};
+
+window.cancelCrop = function() {
+  document.getElementById('cropBox').classList.add('hidden');
+  document.getElementById('cropActions').style.display = 'none';
+  mode = 'clean';
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === 'clean'));
+};
+
+// ===== 擦除 =====
+let lastEraseX = 0, lastEraseY = 0;
+
+function initErase() {
+  document.getElementById('cropBox').classList.add('hidden');
+}
+
+function getCanvasPos(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = canvas.width / rect.width;
+  const sy = canvas.height / rect.height;
+  return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
+}
+
+previewCanvas.addEventListener('mousedown', e => {
+  if (mode !== 'erase') return;
+  isErasing = true;
+  const pos = getCanvasPos(e, previewCanvas);
+  lastEraseX = pos.x; lastEraseY = pos.y;
+
+  eraseMaskCtx.fillStyle = 'rgba(255,0,0,0.5)';
+  eraseMaskCtx.beginPath();
+  eraseMaskCtx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2);
+  eraseMaskCtx.fill();
+  updatePreview();
+});
+
+previewCanvas.addEventListener('mousemove', e => {
+  if (!isErasing || mode !== 'erase') return;
+  const pos = getCanvasPos(e, previewCanvas);
+
+  eraseMaskCtx.fillStyle = 'rgba(255,0,0,0.5)';
+  eraseMaskCtx.strokeStyle = 'rgba(255,0,0,0.5)';
+  eraseMaskCtx.lineWidth = brushSize;
+  eraseMaskCtx.lineCap = 'round';
+  eraseMaskCtx.lineJoin = 'round';
+  eraseMaskCtx.beginPath();
+  eraseMaskCtx.moveTo(lastEraseX, lastEraseY);
+  eraseMaskCtx.lineTo(pos.x, pos.y);
+  eraseMaskCtx.stroke();
+
+  lastEraseX = pos.x; lastEraseY = pos.y;
+  updatePreview();
+});
+
+document.addEventListener('mouseup', () => {
+  if (isErasing) { isErasing = false; saveEraseState(); }
+});
+
+function saveEraseState() {
+  const snap = eraseMaskCtx.getImageData(0, 0, eraseMask.width, eraseMask.height);
+  eraseHistory.push(snap);
+  if (eraseHistory.length > 30) eraseHistory.shift();
+}
+
+window.undoErase = function() {
+  if (eraseHistory.length < 2) {
+    eraseMaskCtx.clearRect(0, 0, eraseMask.width, eraseMask.height);
+    updatePreview();
+    return;
+  }
+  eraseHistory.pop();
+  const prev = eraseHistory[eraseHistory.length - 1];
+  eraseMaskCtx.putImageData(prev, 0, 0);
+  updatePreview();
+};
+
+window.updateBrushSize = function() {
+  brushSize = parseInt(document.getElementById('brushSize').value);
+  document.getElementById('brushSizeLabel').textContent = brushSize + 'px';
+};
+
+// ===== 更新预览 =====
+function updatePreview() {
+  const w = workingCanvas.width, h = workingCanvas.height;
+  previewCtx.clearRect(0, 0, w, h);
+
+  if (mode === 'erase') {
+    const maskData = eraseMaskCtx.getImageData(0, 0, w, h);
+    const imgData = workingCtx.getImageData(0, 0, w, h);
+    const pixels = imgData.data;
+
+    if (eraseMode === 'cut') {
+      for (let i = 0; i < maskData.data.length; i += 4) {
+        if (maskData.data[i] > 50) pixels[i + 3] = 0;
+      }
+    } else if (eraseMode === 'fill') {
+      for (let i = 0; i < maskData.data.length; i += 4) {
+        if (maskData.data[i] > 50) { pixels[i] = 230; pixels[i+1] = 230; pixels[i+2] = 230; }
+      }
+    } else if (eraseMode === 'blur') {
+      const radius = Math.max(1, Math.floor(brushSize / 3));
+      const copy = new Uint8ClampedArray(pixels);
+      for (let y = radius; y < h - radius; y++) {
+        for (let x = radius; x < w - radius; x++) {
+          const idx = (y * w + x) * 4;
+          if (maskData.data[idx] > 50) {
+            let r = 0, g = 0, b = 0, count = 0;
+            for (let dy = -radius; dy <= radius; dy++) {
+              for (let dx = -radius; dx <= radius; dx++) {
+                const ni = ((y + dy) * w + (x + dx)) * 4;
+                r += copy[ni]; g += copy[ni+1]; b += copy[ni+2]; count++;
+              }
+            }
+            pixels[idx] = r / count; pixels[idx+1] = g / count; pixels[idx+2] = b / count;
+          }
+        }
+      }
+    }
+    previewCtx.putImageData(imgData, 0, 0);
+
+    // Light red tint overlay to show masked areas
+    previewCtx.save();
+    previewCtx.globalAlpha = 0.35;
+    previewCtx.drawImage(eraseMask, 0, 0);
+    previewCtx.restore();
+  } else {
+    previewCtx.drawImage(workingCanvas, 0, 0);
+  }
+}
+
+function resizeAllCanvases(w, h) {
+  document.getElementById('originalCanvas').width = w;
+  document.getElementById('originalCanvas').height = h;
+  previewCanvas.width = w; previewCanvas.height = h;
+  // Reset erase mask
+  eraseMask.width = w; eraseMask.height = h;
+  eraseMaskCtx = eraseMask.getContext('2d');
+  eraseHistory = [];
+}
+
+// ===== 标签 =====
+function renderTags() {
+  document.getElementById('tagsCloud').innerHTML = presetTags.map(t =>
+    `<span class="tag-chip ${selectedTags.includes(t)?'selected':''}" onclick="toggleTag('${t}')">${t}</span>`
+  ).join('');
+}
+
+window.toggleTag = function(tag) {
+  const idx = selectedTags.indexOf(tag);
+  if (idx >= 0) selectedTags.splice(idx, 1); else selectedTags.push(tag);
+  renderTags();
+};
+
+window.addCustomTag = function() {
+  const input = document.getElementById('customTagInput');
+  const tag = input.value.trim();
+  if (tag && !presetTags.includes(tag)) { presetTags.push(tag); selectedTags.push(tag); renderTags(); }
+  input.value = '';
+};
+
+// ===== 导出 =====
+window.downloadImage = function() {
+  previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  previewCtx.drawImage(workingCanvas, 0, 0);
+  previewCanvas.toBlob(blob => {
+    const title = document.getElementById('titleInput').value || 'inspiration';
+    const filename = title.replace(/[^a-z0-9]/gi, '-').toLowerCase().replace(/-+/g, '-').replace(/^-|-$/g, '') + '.webp';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    showToast('已下载 ' + filename);
+  }, 'image/webp', 0.9);
+};
+
+window.copyJSON = function() {
+  const title = document.getElementById('titleInput').value || '未命名';
+  const source = document.getElementById('sourceInput').value || '';
+  const note = document.getElementById('noteInput').value || '';
+  const filename = title.replace(/[^a-z0-9]/gi, '-').toLowerCase().replace(/-+/g, '-').replace(/^-|-$/g, '') + '.webp';
+
+  const json = {
+    id: 'insp-' + Date.now().toString(36),
+    type: 'image',
+    src: '/inspire/' + filename,
+    title: title,
+    tag: selectedTags,
+    note: note,
+    source: source,
+    createAt: new Date().toISOString().slice(0, 10)
+  };
+
+  navigator.clipboard.writeText(JSON.stringify(json, null, 2)).then(() => {
+    showToast('JSON 已复制到剪贴板');
+  }).catch(() => {
+    showToast('复制失败，请检查浏览器权限');
+  });
+};
+
+// ===== 重置 =====
+window.resetAll = function() {
+  if (!originalImage) return;
+  eraseMaskCtx.clearRect(0, 0, eraseMask.width, eraseMask.height);
+  eraseHistory = [];
+  selectedTags = [];
+  document.getElementById('titleInput').value = '';
+  document.getElementById('sourceInput').value = '';
+  document.getElementById('noteInput').value = '';
+  renderTags();
+  initWorkspace();
+  showToast('已重置');
+};
+
+// ===== Toast =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timeout); t._timeout = setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+<script src="/shared/nav.js?v=4"></script>
+</body>
+</html>

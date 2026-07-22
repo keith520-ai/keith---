@@ -1,387 +1,525 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>万朗 - 产品经理</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/shared/styles.css">
-    <style>
-        html, body { height: 100%; overflow: hidden; }
-        body { background: #000; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万朗 · Product Manager</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #87a7c7; }
+  canvas { display: block; }
 
-        /* ===== 视频层 ===== */
-        #videoStage {
-            position: fixed;
-            inset: 0;
-            z-index: 30;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.8s ease;
-        }
-        #introVideo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #000;
-        }
-        #skipBtn {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            color: rgba(255,255,255,0.7);
-            font-size: 13px;
-            padding: 8px 16px;
-            border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.25);
-            backdrop-filter: blur(8px);
-            background: rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 40;
-            transition: all 0.2s ease;
-        }
-        #skipBtn:hover {
-            color: white;
-            border-color: rgba(255,255,255,0.5);
-            background: rgba(0,0,0,0.4);
-        }
-        #videoStage.fade-out { opacity: 0; pointer-events: none; }
+  /* ===== 加载界面 ===== */
+  #loading {
+    position: fixed; inset: 0; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; transition: opacity 0.8s; color: #fff; gap: 20px;
+  }
+  #loading.hidden { opacity: 0; pointer-events: none; }
+  #loading .spinner {
+    width: 52px; height: 52px; border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading .label { font-size: 15px; opacity: 0.6; letter-spacing: 1px; text-align: center; }
+  #loading .progress-bar {
+    width: 240px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;
+  }
+  #loading .progress-fill {
+    height: 100%; width: 0%; background: #fff; border-radius: 2px; transition: width 0.3s;
+  }
 
-        /* ===== 主舞台 ===== */
-        #mainStage {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            opacity: 0;
-            transform: scale(1.03);
-            background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%);
-            will-change: opacity, transform;
-        }
-        #mainStage.transitioning {
-            transition: opacity 0.9s ease, transform 0.9s ease;
-        }
-        #mainStage.visible {
-            opacity: 1;
-            transform: scale(1);
-        }
-        html.show-main, body.show-main { overflow: auto; }
+  /* ===== 顶部导航（6大模块 + Logo）===== */
+  #navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 36px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+    pointer-events: none;
+  }
+  #navbar .logo {
+    color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 1px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.6); pointer-events: auto;
+    text-decoration: none;
+  }
+  #navbar .logo span { opacity: 0.5; font-weight: 300; }
+  #navbar nav { display: flex; gap: 28px; pointer-events: auto; }
+  #navbar nav a {
+    color: rgba(255,255,255,0.8); text-decoration: none; font-size: 13px;
+    font-weight: 500; letter-spacing: 1px; transition: color 0.2s;
+    text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+  }
+  #navbar nav a:hover { color: #fff; }
 
-        /* 左：AI 虚拟人 */
-        .avatar-pane {
-            flex: 0 0 42%;
-            position: relative;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .avatar-glow {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 45%, rgba(167,139,250,0.35) 0%, transparent 55%);
-            animation: pulseGlow 4s ease-in-out infinite;
-        }
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50%      { opacity: 1;   transform: scale(1.08); }
-        }
-        .avatar-circle {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #A78BFA 0%, #F472B6 50%, #FF8E72 100%);
-            box-shadow: 0 30px 80px rgba(167,139,250,0.45);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: floatY 6s ease-in-out infinite;
-        }
-        @keyframes floatY {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-12px); }
-        }
-        .avatar-circle::before {
-            content: '';
-            position: absolute;
-            inset: -16px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.18);
-            animation: ringRotate 12s linear infinite;
-        }
-        .avatar-circle::after {
-            content: '';
-            position: absolute;
-            inset: -32px;
-            border-radius: 50%;
-            border: 1px dashed rgba(255,255,255,0.12);
-            animation: ringRotate 24s linear infinite reverse;
-        }
-        @keyframes ringRotate {
-            to { transform: rotate(360deg); }
-        }
-        .avatar-icon {
-            font-size: 96px;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
-        }
-        .avatar-label {
-            position: absolute;
-            bottom: 48px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            color: rgba(255,255,255,0.85);
-        }
-        .avatar-name {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            letter-spacing: 1px;
-        }
-        .avatar-role {
-            font-size: 13px;
-            color: rgba(255,255,255,0.5);
-            letter-spacing: 2px;
-        }
-        .avatar-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4ECDC4;
-            box-shadow: 0 0 12px #4ECDC4;
-            animation: blinkDot 1.6s ease-in-out infinite;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-        @keyframes blinkDot {
-            0%, 100% { opacity: 1; }
-            50%      { opacity: 0.35; }
-        }
+  /* ===== 个人介绍卡 ===== */
+  #intro-card {
+    position: fixed; left: 36px; top: 50%; transform: translateY(-50%);
+    z-index: 15; max-width: 380px; pointer-events: none;
+    opacity: 0; animation: fadeInLeft 1.2s 0.8s forwards;
+  }
+  @keyframes fadeInLeft {
+    from { opacity: 0; transform: translate(-20px, -50%); }
+    to { opacity: 1; transform: translate(0, -50%); }
+  }
+  #intro-card h1 {
+    color: #fff; font-size: 42px; font-weight: 800; line-height: 1.1;
+    margin-bottom: 18px; text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+  }
+  #intro-card p {
+    color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.8;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  }
 
-        /* 右：六大模块 */
-        .modules-pane {
-            flex: 1;
-            padding: 48px 56px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            overflow-y: auto;
-        }
-        .modules-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 24px;
-        }
-        .modules-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .module-card {
-            position: relative;
-            padding: 24px;
-            border-radius: 18px;
-            color: white;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            text-decoration: none;
-            display: block;
-        }
-        .module-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-        .module-card:hover .module-arrow {
-            transform: translate(4px, -4px);
-        }
-        .module-arrow { transition: transform 0.3s ease; }
-        .module-num {
-            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-            font-size: 11px;
-            opacity: 0.65;
-        }
-        .module-title { font-size: 18px; font-weight: 700; margin-top: 28px; }
-        .module-en { font-size: 11px; opacity: 0.65; margin-top: 2px; }
-
-        /* 入场顺序动画 */
-        #mainStage.visible .module-card {
-            animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-        }
-        #mainStage.visible .module-card:nth-child(1) { animation-delay: 0.20s; }
-        #mainStage.visible .module-card:nth-child(2) { animation-delay: 0.28s; }
-        #mainStage.visible .module-card:nth-child(3) { animation-delay: 0.36s; }
-        #mainStage.visible .module-card:nth-child(4) { animation-delay: 0.44s; }
-        #mainStage.visible .module-card:nth-child(5) { animation-delay: 0.52s; }
-        #mainStage.visible .module-card:nth-child(6) { animation-delay: 0.60s; }
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-            #mainStage { flex-direction: column; }
-            .avatar-pane { flex: 0 0 40%; }
-            .modules-pane { padding: 32px 24px; }
-            .avatar-circle { width: 160px; height: 160px; }
-            .avatar-icon { font-size: 60px; }
-            .avatar-label { bottom: 16px; }
-            .avatar-name { font-size: 20px; }
-        }
-    </style>
+</style>
 </head>
 <body>
 
-    <!-- 视频层 -->
-    <div id="videoStage">
-        <video id="introVideo" playsinline preload="auto" muted>
-            <source src="/assets/intro.mp4" type="video/mp4">
-        </video>
-        <button id="skipBtn" type="button">跳过 ›</button>
-    </div>
+  <!-- 加载界面 -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="label" id="loading-label">正在加载场景...</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
 
-    <!-- 主舞台 -->
-    <div id="mainStage">
-        <!-- 左：AI 虚拟人 -->
-        <div class="avatar-pane">
-            <div class="avatar-glow"></div>
-            <div class="avatar-circle">
-                <span class="avatar-icon">🧑‍💻</span>
-            </div>
-            <div class="avatar-label">
-                <p class="avatar-name">万朗</p>
-                <p class="avatar-role"><span class="avatar-dot"></span>AI · 产品经理</p>
-            </div>
-        </div>
+  <!-- 顶部导航：6大模块 -->
+  <nav id="navbar">
+    <a href="/" class="logo">万朗<span> · Product Manager</span></a>
+    <nav>
+      <a href="/" title="首页" class="home-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v11h14V10"/><path d="M9 21V13h6v8"/></svg></a>
+      <a href="/story/">个人故事</a>
+      <a href="/projects/">项目经历</a>
+      <a href="/inspiration/">灵感采集</a>
+      <a href="/lab/">实验场</a>
+      <a href="/fun/">趣味互动</a>
+      <a href="/thoughts/">思考碎片</a>
+    </nav>
+  </nav>
 
-        <!-- 右：六大模块 -->
-        <div class="modules-pane">
-            <p class="modules-title">探索我的世界</p>
-            <div class="modules-grid">
-                <a href="/story/" class="module-card" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E72 100%);">
-                    <div class="flex justify-between items-start">
-                        <span class="module-num">01</span>
-                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                    </div>
-                    <p class="module-title">个人故事</p>
-                    <p class="module-en">My Story</p>
-                </a>
-                <a href="/projects/" class="module-card" style="background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);">
-                    <div class="flex justify-between items-start">
-                        <span class="module-num">02</span>
-                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                    </div>
-                    <p class="module-title">项目经历</p>
-                    <p class="module-en">Projects</p>
-                </a>
-                <a href="/inspiration/" class="module-card" style="background: linear-gradient(135deg, #FFB347 0%, #FFA500 100%);">
-                    <div class="flex justify-between items-start">
-                        <span class="module-num">03</span>
-                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                    </div>
-                    <p class="module-title">灵感采集</p>
-                    <p class="module-en">Inspiration</p>
-                </a>
-                <a href="/lab/" class="module-card" style="background: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);">
-                    <div class="flex justify-between items-start">
-                        <span class="module-num">04</span>
-                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                    </div>
-                    <p class="module-title">实验场</p>
-                    <p class="module-en">Lab</p>
-                </a>
-                <a href="/fun/" class="module-card" style="background: linear-gradient(135deg, #F472B6 0%, #EC4899 100%);">
-                    <div class="flex justify-between items-start">
-                        <span class="module-num">05</span>
-                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                    </div>
-                    <p class="module-title">趣味互动</p>
-                    <p class="module-en">Play</p>
-                </a>
-                <a href="/thoughts/" class="module-card" style="background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);">
-                    <div class="flex justify-between items-start">
-                        <span class="module-num">06</span>
-                        <svg class="w-4 h-4 module-arrow opacity-80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-                    </div>
-                    <p class="module-title">思考碎片</p>
-                    <p class="module-en">Thoughts</p>
-                </a>
-            </div>
-        </div>
-    </div>
+  <!-- 介绍卡 -->
+  <div id="intro-card">
+    <h1>你好，<br>我是万朗</h1>
+    <p>AI × Social 产品经理<br>用设计思维解决真实问题</p>
+  </div>
 
-    <script>
-        (function () {
-            const SESSION_KEY = 'introPlayed';
-            const videoStage = document.getElementById('videoStage');
-            const mainStage = document.getElementById('mainStage');
-            const video = document.getElementById('introVideo');
-            const skipBtn = document.getElementById('skipBtn');
+  <canvas id="canvas"></canvas>
 
-            // 已在本次会话播放过 → 直接显示主舞台
-            // sessionStorage 的特性：标签页关闭即清空，再次进入会重新播放
-            const alreadyPlayed = sessionStorage.getItem(SESSION_KEY) === '1';
+  <script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
 
-            function showMain() {
-                if (showMain._done) return;
-                showMain._done = true;
-                sessionStorage.setItem(SESSION_KEY, '1');
-                document.documentElement.classList.add('show-main');
-                document.body.classList.add('show-main');
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/assets/js/three.module.js",
+      "three/addons/": "/assets/js/"
+    }
+  }
+  </script>
 
-                // 先启用过渡，再切到可见态
-                mainStage.classList.add('transitioning');
-                void mainStage.offsetWidth;
-                setTimeout(() => {
-                    mainStage.classList.add('visible');
-                }, 16);
+  <script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-                // 视频淡出
-                setTimeout(() => {
-                    videoStage.classList.add('fade-out');
-                    setTimeout(() => {
-                        videoStage.style.display = 'none';
-                    }, 900);
-                }, 80);
+  window.addEventListener('error', (ev) => {
+    let box = document.getElementById('err-box');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'err-box';
+      box.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:999;max-width:60vw;'
+        + 'background:rgba(180,0,0,.9);color:#fff;font:12px/1.5 monospace;padding:10px 14px;'
+        + 'border-radius:8px;white-space:pre-wrap;pointer-events:none;';
+      document.body.appendChild(box);
+    }
+    box.textContent = 'JS ERROR: ' + (ev.message || ev.error) + (ev.filename ? ('\n@ ' + ev.filename + ':' + ev.lineno) : '');
+  });
+
+  let scene, camera, renderer, controls;
+  let character, mixer, actions = {};
+  let town;
+  let currentAction = null, currentActionName = '';
+  let clock = new THREE.Clock();
+
+  const CHARACTER_FEET_LOCAL_Y = -0.0246;
+  const GROUND_Y = 0.045;
+  const STAND_X = 0.03;
+  const STAND_Z = 0.1;
+  const CHARACTER_SCALE = 0.175;
+  const CHARACTER_Y_OFFSET = 0.006;
+
+  const FX = {
+    INTRO_DURATION: 3.0,
+    INTRO_BLUR: 4,
+    CLOUD_COUNT: 12,
+    CLOUD_OPACITY: 0.92,
+    CLOUD_SPREAD: 0.6,
+    CLOUD_BOB_SPEED: 0.5,
+    CLOUD_BOB_AMP: 0.03,
+    ISLAND_START_ANGLE: 0.30,
+    GREETING_ANIM: '挥手_1',
+    IDLE_ANIM: 'Idle_4',
+    KICK_ANIM: 'Kick To The Groin_6',
+    CLICK_TORSO_MIN_Y: 0.25,
+    CLICK_TORSO_MAX_Y: 1.05,
+  };
+
+  const CAM_TARGET = new THREE.Vector3(STAND_X, GROUND_Y + 0.16, STAND_Z);
+  const CAM_FINAL  = new THREE.Vector3(STAND_X - 0.02, GROUND_Y + 0.22, STAND_Z + 0.837);
+  const CAM_START  = new THREE.Vector3(STAND_X + 0.95, GROUND_Y + 0.62, STAND_Z - 1.35);
+
+  let camStartPos = new THREE.Vector3();
+  let camFinalPos = new THREE.Vector3();
+  let introDone = false;
+  let pendingOnceCallback = null;
+  let cloudLayer = null;
+  let cloudTime = 0;
+  let introTl = null;
+
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let pointerDown = null;
+
+  async function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87a7c7);
+
+    camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.01, 100);
+    camStartPos = CAM_START.clone();
+    camFinalPos = CAM_FINAL.clone();
+    camera.position.copy(camStartPos);
+    scene.add(camera);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById('canvas') });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.copy(CAM_TARGET);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxPolarAngle = Math.PI * 0.5;
+    controls.minPolarAngle = Math.PI * 0.15;
+    controls.minDistance = 0.4;
+    controls.maxDistance = 1.0;
+    controls.enablePan = false;
+    controls.rotateSpeed = 0.6;
+    controls.minAzimuthAngle = -Math.PI / 2;
+    controls.maxAzimuthAngle = Math.PI / 2;
+    controls.enabled = true;
+    controls.enableZoom = true;
+    controls.autoRotate = false;
+
+    scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x8a7d5a, 1.0));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+    const sunLight = new THREE.DirectionalLight(0xfff3e0, 2.0);
+    sunLight.position.set(STAND_X + 0.6, GROUND_Y + 1.5, STAND_Z + 0.6);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.near = 0.05;
+    sunLight.shadow.camera.far = 5;
+    sunLight.shadow.camera.left = -1.0;
+    sunLight.shadow.camera.right = 1.0;
+    sunLight.shadow.camera.top = 1.0;
+    sunLight.shadow.camera.bottom = -1.0;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+
+    const fillLight = new THREE.DirectionalLight(0xaaccff, 0.5);
+    fillLight.position.set(STAND_X - 0.6, GROUND_Y + 0.8, STAND_Z - 0.6);
+    scene.add(fillLight);
+
+    cloudLayer = createFrontClouds();
+
+    const shadowGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.ShadowMaterial({ opacity: 0.3 })
+    );
+    shadowGround.rotation.x = -Math.PI / 2;
+    shadowGround.position.set(STAND_X, GROUND_Y, STAND_Z);
+    shadowGround.receiveShadow = true;
+    scene.add(shadowGround);
+
+    await loadTown();
+    await loadCharacter();
+
+    addEventListener('resize', onResize);
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+
+    document.getElementById('loading').classList.add('hidden');
+    startIntro();
+    animate();
+  }
+
+  function loadTown() {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load('/assets/flat_ground.glb', (gltf) => {
+        town = gltf.scene;
+        let meshCount = 0;
+        town.traverse(o => {
+          if (o.isMesh) {
+            meshCount++;
+            o.castShadow = true;
+            o.receiveShadow = true;
+            if (o.material) {
+              if (o.material.map) o.material.map.colorSpace = THREE.SRGBColorSpace;
+              if (o.material.metalness !== undefined) o.material.envMapIntensity = 0.3;
             }
+          }
+        });
+        scene.add(town);
+        resolve();
+      }, (progress) => {
+        if (progress.lengthComputable) {
+          const pct = Math.round(progress.loaded / progress.total * 100);
+          document.getElementById('loading-label').textContent = `正在加载小岛场景... ${pct}%`;
+          document.getElementById('progress-fill').style.width = pct + '%';
+        }
+      }, (error) => {
+        document.getElementById('loading-label').textContent = '小岛加载失败';
+        reject(error);
+      });
+    });
+  }
 
-            if (alreadyPlayed) {
-                // 跳过视频，直接展示（无过渡）
-                videoStage.style.display = 'none';
-                document.documentElement.classList.add('show-main');
-                document.body.classList.add('show-main');
-                mainStage.classList.add('visible');
-            } else {
-                // 视频播放结束 → 过渡到主舞台
-                video.addEventListener('ended', showMain);
-                // 视频加载失败 → 也直接进入主舞台
-                video.addEventListener('error', showMain);
-                // 跳过按钮
-                skipBtn.addEventListener('click', showMain);
-                // 自动播放
-                const playPromise = video.play();
-                if (playPromise && typeof playPromise.catch === 'function') {
-                    playPromise.catch(() => {
-                        // 自动播放被阻止时，等待用户点击页面任意位置触发
-                        const onFirstInteract = () => {
-                            video.play().catch(() => showMain());
-                            window.removeEventListener('click', onFirstInteract);
-                            window.removeEventListener('keydown', onFirstInteract);
-                        };
-                        window.addEventListener('click', onFirstInteract);
-                        window.addEventListener('keydown', onFirstInteract);
-                    });
-                }
+  function createFrontClouds() {
+    const layer = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, roughness: 1, metalness: 0,
+      transparent: true, opacity: FX.CLOUD_OPACITY,
+      depthWrite: false,
+      emissive: 0x46586a, emissiveIntensity: 0.12
+    });
+    const COUNT = FX.CLOUD_COUNT;
+    const cols = 4, rows = 3;
+    for (let i = 0; i < COUNT; i++) {
+      const puff = new THREE.Group();
+      const blobs = 3 + Math.floor(Math.random() * 4);
+      for (let j = 0; j < blobs; j++) {
+        const r = 0.10 + Math.random() * 0.12;
+        const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 2), mat);
+        m.position.set((Math.random() - 0.5) * 0.28, (Math.random() - 0.5) * 0.18, (Math.random() - 0.5) * 0.22);
+        puff.add(m);
+      }
+      const gx = i % cols, gy = Math.floor(i / cols);
+      const x = (gx / (cols - 1) - 0.5) * 1.1;
+      const y = (gy / (rows - 1) - 0.5) * 0.8;
+      const z = -0.45 - Math.random() * 0.35;
+      puff.position.set(x, y, z);
+      puff.scale.setScalar(0.8 + Math.random() * 0.6);
+      const dir = new THREE.Vector3(x, y, 0).normalize();
+      puff.userData = {
+        base: puff.position.clone(), spread: dir,
+        bobPhase: Math.random() * Math.PI * 2,
+        bobSpeed: FX.CLOUD_BOB_SPEED * (0.7 + Math.random() * 0.6),
+        bobAmp: FX.CLOUD_BOB_AMP * (0.6 + Math.random() * 0.8)
+      };
+      layer.add(puff);
+    }
+    layer.userData.mat = mat;
+    layer.userData.reveal = 0;
+    camera.add(layer);
+    return layer;
+  }
+
+  function updateCloudReveal(e) {
+    if (!cloudLayer) return;
+    cloudLayer.userData.reveal = e;
+    cloudLayer.userData.mat.opacity = (1 - e) * FX.CLOUD_OPACITY;
+  }
+
+  function destroyClouds() {
+    if (!cloudLayer) return;
+    cloudLayer.traverse(o => {
+      if (o.isMesh) {
+        o.geometry.dispose();
+        if (Array.isArray(o.material)) o.material.forEach(m => m.dispose());
+        else o.material.dispose();
+      }
+    });
+    camera.remove(cloudLayer);
+    cloudLayer = null;
+  }
+
+  function loadCharacter() {
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load('/assets/character-perfect.glb', (gltf) => {
+        character = gltf.scene;
+        character.traverse(o => {
+          if (o.isMesh) {
+            o.castShadow = true;
+            o.receiveShadow = true;
+            if (o.geometry) {
+              o.geometry.computeBoundingSphere();
+              if (o.geometry.boundingSphere) o.geometry.boundingSphere.radius *= 3;
             }
-        })();
-    </script>
-    <script src="/shared/nav.js"></script>
+            if (o.material && o.material.map) {
+              o.material.map.colorSpace = THREE.SRGBColorSpace;
+            }
+          }
+        });
+
+        character.scale.setScalar(CHARACTER_SCALE);
+        character.position.set(STAND_X, GROUND_Y - CHARACTER_FEET_LOCAL_Y * CHARACTER_SCALE + CHARACTER_Y_OFFSET, STAND_Z);
+        scene.add(character);
+
+        mixer = new THREE.AnimationMixer(character);
+
+        gltf.animations.forEach(clip => {
+          const action = mixer.clipAction(clip);
+          action.setLoop(THREE.LoopRepeat, Infinity);
+          actions[clip.name] = action;
+        });
+
+        mixer.addEventListener('finished', () => {
+          if (pendingOnceCallback) {
+            const cb = pendingOnceCallback; pendingOnceCallback = null;
+            cb();
+          }
+        });
+
+        playLoop(FX.IDLE_ANIM, 0.0);
+        resolve();
+      }, (progress) => {
+        if (progress.lengthComputable) {
+          const pct = Math.round(progress.loaded / progress.total * 100);
+          document.getElementById('loading-label').textContent = `正在加载3D角色... ${pct}%`;
+          document.getElementById('progress-fill').style.width = pct + '%';
+        }
+      }, (error) => {
+        document.getElementById('loading-label').textContent = '人物加载失败';
+        reject(error);
+      });
+    });
+  }
+
+  function ensureLoop(name) {
+    const a = actions[name];
+    if (a) { a.setLoop(THREE.LoopRepeat, Infinity); a.clampWhenFinished = false; a.enabled = true; }
+    return a;
+  }
+  function ensureOnce(name) {
+    const a = actions[name];
+    if (a) { a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.enabled = true; }
+    return a;
+  }
+  function playLoop(name, fade = 0.3) {
+    if (!actions[name] || currentActionName === name) return;
+    const next = ensureLoop(name);
+    if (currentAction) currentAction.fadeOut(fade);
+    next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(fade).play();
+    currentAction = next;
+    currentActionName = name;
+  }
+  function playOnce(name, fade = 0.3, onDone = null) {
+    if (!actions[name]) return;
+    const next = ensureOnce(name);
+    if (currentAction) currentAction.fadeOut(fade);
+    next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(fade).play();
+    currentAction = next;
+    currentActionName = name;
+    pendingOnceCallback = onDone || null;
+  }
+
+  function startIntro() {
+    camera.position.copy(camStartPos);
+    camera.lookAt(CAM_TARGET);
+    controls.enabled = false;
+    if (town) town.rotation.y = FX.ISLAND_START_ANGLE;
+
+    const state = { p: 0 };
+    introTl = gsap.timeline();
+    introTl.to(state, {
+      p: 1, duration: FX.INTRO_DURATION, ease: 'power2.inOut',
+      onUpdate: () => {
+        const e = state.p;
+        camera.position.lerpVectors(camStartPos, camFinalPos, e);
+        camera.lookAt(CAM_TARGET);
+        if (town) town.rotation.y = FX.ISLAND_START_ANGLE * (1 - e);
+        updateCloudReveal(e);
+        const blur = (1 - e) * FX.INTRO_BLUR;
+        renderer.domElement.style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
+      }
+    }, 0);
+  }
+
+  function finalizeIntro() {
+    if (introDone) return;
+    introDone = true;
+    camera.position.copy(camFinalPos);
+    camera.lookAt(CAM_TARGET);
+    if (town) town.rotation.y = 0;
+    controls.enabled = true;
+    renderer.domElement.style.filter = 'none';
+    destroyClouds();
+    playOnce(FX.GREETING_ANIM, 0.3, () => {
+      playLoop(FX.IDLE_ANIM, 0.4);
+    });
+  }
+
+  function onPointerDown(e) { if (introDone) pointerDown = { x: e.clientX, y: e.clientY }; }
+  function onPointerUp(e) {
+    if (!introDone || !pointerDown) return;
+    const dx = e.clientX - pointerDown.x, dy = e.clientY - pointerDown.y;
+    pointerDown = null;
+    if (Math.hypot(dx, dy) > 10) return;
+    handleCharacterClick(e.clientX, e.clientY);
+  }
+  function handleCharacterClick(cx, cy) {
+    if (!character) return;
+    pointer.x = (cx / innerWidth) * 2 - 1;
+    pointer.y = -(cy / innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    character.updateMatrixWorld(true);
+    const hits = raycaster.intersectObject(character, true);
+    if (!hits.length) return;
+    const hit = hits[0];
+    const local = character.worldToLocal(hit.point.clone());
+    const ly = local.y;
+    const inRange = ly > FX.CLICK_TORSO_MIN_Y && ly < FX.CLICK_TORSO_MAX_Y;
+    if (inRange) triggerKick();
+  }
+  function triggerKick() {
+    playOnce(FX.KICK_ANIM, 0.25, () => playLoop(FX.IDLE_ANIM, 0.3));
+  }
+
+  function onResize() {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.1);
+
+    if (cloudLayer) {
+      cloudTime += dt;
+      const reveal = cloudLayer.userData.reveal || 0;
+      const sp = FX.CLOUD_SPREAD * reveal;
+      cloudLayer.children.forEach(puff => {
+        const u = puff.userData;
+        puff.position.x = u.base.x + u.spread.x * sp;
+        puff.position.y = u.base.y + u.spread.y * sp + Math.sin(cloudTime * u.bobSpeed + u.bobPhase) * u.bobAmp;
+        puff.position.z = u.base.z - reveal * 0.2;
+      });
+    }
+
+    if (mixer) mixer.update(dt);
+
+    if (!introDone && introTl && introTl.progress() >= 1) finalizeIntro();
+
+    if (introDone) controls.update();
+    renderer.render(scene, camera);
+
+  }
+
+  init();
+  </script>
 </body>
 </html>
